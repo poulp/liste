@@ -1,31 +1,31 @@
-struct Subscription {
-    name: String,
+pub struct Subscription {
+    pub name: String,
 }
 
 impl Subscription {
 
-    fn new(name: String) -> Subscription {
+    pub fn new(name: String) -> Subscription {
         Subscription {
             name: name
         }
     }
 }
 
-struct ListModel<'a> {
-    subscriptions: Vec<&'a Subscription>,
+pub struct ListModel<'a> {
+    pub subscriptions: Vec<&'a Subscription>,
     //observers: Vec<&'a Window>
 }
 
 impl<'a> ListModel<'a> {
 
-    fn new() -> ListModel<'a> {
+    pub fn new() -> ListModel<'a> {
         ListModel {
             //observers: vec![],
             subscriptions:vec![],
         }
     }
 
-    fn add_feed(&mut self, feed: &'a Subscription) {
+    pub fn add_feed(&mut self, feed: &'a Subscription) {
         self.subscriptions.push(feed);
         //self.notify_observers();
     }

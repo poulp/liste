@@ -1,14 +1,16 @@
-use model;
+extern crate ncurses;
 
-struct Window {
-    name: String,
+use model::ListModel;
+
+pub struct Window {
+    pub name: String,
     widget: ncurses::WINDOW,
-    active_sub: i32
+    pub active_sub: i32
 }
 
 impl Window {
 
-    fn new(name: String, width: i32, height: i32) -> Window {
+    pub fn new(name: String, width: i32, height: i32) -> Window {
         let window = Window::create_widget(width/2, height/2, 10 , 10);
         Window {
             name: name,
@@ -23,24 +25,8 @@ impl Window {
         ncurses::wrefresh(window);
         window
     }
-//
-//    fn next_active_sub(&mut self, subscriptions: &Vec<&Subscription>){
-//        if !subscriptions.is_empty() {
-//            if self.active_sub + 1 < subscriptions.len() as i32 {
-//                self.active_sub += 1;
-//            }
-//        }
-//    }
-//
-//    fn previous_active_sub(&mut self, model: &ListModel){
-//        if !model.subscriptions.is_empty() {
-//            if self.active_sub - 1 >= 0 {
-//                self.active_sub -= 1;
-//            }
-//        }
-//    }
 
-    fn draw(&self, model: &ListModel) {
+    pub fn draw(&self, model: &ListModel) {
         ncurses::clear();
         for (index, feed) in model.subscriptions.iter().enumerate() {
             if self.active_sub == index as i32 {
@@ -54,7 +40,7 @@ impl Window {
         ncurses::refresh();
     }
 
-    fn on_notify(&self, model: &ListModel) {
-        self.draw(model);
-    }
+//    fn on_notify(&self, model: &ListModel) {
+//        self.draw(model);
+//    }
 }
