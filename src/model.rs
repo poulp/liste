@@ -11,21 +11,22 @@ impl Subscription {
     }
 }
 
-pub struct ListModel<'a> {
-    pub subscriptions: Vec<&'a Subscription>,
+pub struct ListModel {
+    pub subscriptions: Vec<Subscription>,
     //observers: Vec<&'a Window>
 }
 
-impl<'a> ListModel<'a> {
+impl ListModel {
 
-    pub fn new() -> ListModel<'a> {
+    pub fn new() -> ListModel {
         ListModel {
             //observers: vec![],
             subscriptions:vec![],
         }
     }
 
-    pub fn add_feed(&mut self, feed: &'a Subscription) {
+    pub fn add_feed(&mut self, feed_name: String) {
+        let feed = Subscription::new(feed_name);
         self.subscriptions.push(feed);
         //self.notify_observers();
     }

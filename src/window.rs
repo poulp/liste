@@ -1,21 +1,19 @@
 extern crate ncurses;
 
-use model::ListModel;
+use model::{ListModel, Subscription};
 
 pub struct Window {
     pub name: String,
-    widget: ncurses::WINDOW,
-    pub active_sub: i32
+    pub active_sub: i32,
+    feed_windows: Vec<ncurses::WINDOW>
 }
 
 impl Window {
-
     pub fn new(name: String, width: i32, height: i32) -> Window {
-        let window = Window::create_widget(width/2, height/2, 10 , 10);
         Window {
             name: name,
-            widget: window,
-            active_sub: 0
+            active_sub: 0,
+            feed_windows: vec![]
         }
     }
 
@@ -26,21 +24,44 @@ impl Window {
         window
     }
 
-    pub fn draw(&self, model: &ListModel) {
-        ncurses::clear();
-        for (index, feed) in model.subscriptions.iter().enumerate() {
-            if self.active_sub == index as i32 {
-                ncurses::attron(ncurses::A_BOLD());
-                ncurses::printw(&feed.name);
-                ncurses::attroff(ncurses::A_BOLD());
-            } else {
-                ncurses::printw(&feed.name);
-            }
+    fn create_window_row_feed(&self, feed: &Subscription, index: i32) -> ncurses::WINDOW {
+        let total_width = ncurses::COLS();
+        let total_height = ncurses::LINES();
+        let startx = 1;
+        let starty = index;
+        let height = 2;
+
+        let window = ncurses::newwin(height, total_width, starty, startx);
+        if self.active_sub == index {
+            //ncurses::wattron(window, ncurses::A_BOLD());
+            ncurses::wbkgd(window, ncurses::COLOR_PAIR(1));
+            ncurses::wprintw(window, &feed.name);
+            //ncurses::wattroff(window, ncurses::A_BOLD());
+        } else {
+            ncurses::wprintw(window, &feed.name);
         }
-        ncurses::refresh();
+        ncurses::wrefresh(window);
+        window
     }
 
-//    fn on_notify(&self, model: &ListModel) {
-//        self.draw(model);
-//    }
+    pub fn draw(&mut self, model: &ListModel) {
+        /* Clean the windows feed list */
+        self.feed_windows.clear();
+        /* Clear the screen */
+        ncurses::refresh();
+        for (index, feed) in model.subscriptions.iter().enumerate() {
+//            let window = ncurses::newwin(10, 10, index as i32, 10);
+//            self.feed_windows.push(window);
+//            if self.active_sub == index as i32 {
+//                ncurses::wattron(window, ncurses::A_BOLD());
+//                ncurses::wprintw(window, &feed.name);
+//                ncurses::wattroff(window, ncurses::A_BOLD());
+//            } else {
+//                ncurses::wprintw(window, &feed.name);
+//            }
+//            ncurses::wrefresh(window);
+            let window = self.create_window_row_feed(&feed, index as i32);
+            self.feed_windows.push(window);
+        }
+    }
 }

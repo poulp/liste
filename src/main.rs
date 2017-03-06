@@ -11,6 +11,8 @@ use std::process;
 use std::time::{Duration, Instant};
 use std::thread;
 
+static COLOR_BACKGROUND: i16 = 16;
+
 fn main() {
     // Start ncurses
     ncurses::initscr();
@@ -25,26 +27,29 @@ fn main() {
     ncurses::noecho(); // Don't echo while getch
     ncurses::keypad(ncurses::stdscr(), true);
     ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE); // Hide cursor
-    ncurses::start_color(); // Enable colors
-    ncurses::init_pair(1, ncurses::COLOR_RED, ncurses::COLOR_BLUE);
     ncurses::timeout(0); // non blocking io
+
+    /* Colors */
+    ncurses::start_color(); // Enable colors
+    //ncurses::init_color(COLOR_BACKGROUND, 0, 43 * 4, 54 * 4);
+    ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
 
 
     const MS_PER_FRAME: u64 = 60;
 
-    let total_width = ncurses::COLS();
-    let total_height = ncurses::LINES();
-
-    let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
 
 
-    let sub_1 = Subscription::new("monflux".to_string());
-    let sub_2 = Subscription::new("monflux number 2".to_string());
-    let mut list_model = ListModel::new();
-    list_model.add_feed(&sub_1);
-    list_model.add_feed(&sub_2);
-
-    let mut controller = Controller::new(&mut feed_window, &list_model);
+//    let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
+//
+//
+//    let sub_1 = Subscription::new("monflux".to_string());
+//    let sub_2 = Subscription::new("monflux number 2".to_string());
+//    let mut list_model = ListModel::new();
+//    list_model.add_feed(&sub_1);
+//    list_model.add_feed(&sub_2);
+//
+//    let mut controller = Controller::new(&mut feed_window, &list_model);
+    let mut controller = Controller::new();
 
     controller.on_init();
 
