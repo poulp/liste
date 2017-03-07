@@ -1,7 +1,13 @@
 extern crate ncurses;
+extern crate feed;
 
 use window::Window;
 use model::{ListModel, Subscription};
+
+use std::io::BufReader;
+use std::io::BufRead;
+use std::fs::File;
+use std::path::Path;
 
 pub struct Controller {
     window: Window,
@@ -16,9 +22,28 @@ impl Controller {
 
         let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
         let mut list_model = ListModel::new();
-        list_model.add_feed("monflux".to_string());
-        list_model.add_feed("monflux2".to_string());
-        list_model.add_feed("monflux2".to_string());
+
+        /* Read urls file */
+        // Create a path to the desired file
+        let path = Path::new("feeds");
+        let display = path.display();
+
+        let mut file = match File::open(&path) {
+            // The `description` method of `io::Error` returns a string that
+            // describes the error
+            Err(why) => panic!("couldn't open"),
+            Ok(file) => file
+        };
+        
+        let buffer = BufReader::new(file);
+
+        /* Add subscriptions */
+        for line in buffer.lines() {
+            let url = line.unwrap();
+            let feed = feed::FeedBuilder::read_from_url(url).finalize();
+            let channel = feed.channel();
+            list_model.add_feed(channel.title());
+        }
 
         Controller {
             window: feed_window,
@@ -51,5 +76,5 @@ impl Controller {
             }
         }
     }
-
 }
+

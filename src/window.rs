@@ -29,14 +29,12 @@ impl Window {
         let total_height = ncurses::LINES();
         let startx = 1;
         let starty = index;
-        let height = 2;
+        let height = 1;
 
         let window = ncurses::newwin(height, total_width, starty, startx);
         if self.active_sub == index {
-            //ncurses::wattron(window, ncurses::A_BOLD());
             ncurses::wbkgd(window, ncurses::COLOR_PAIR(1));
             ncurses::wprintw(window, &feed.name);
-            //ncurses::wattroff(window, ncurses::A_BOLD());
         } else {
             ncurses::wprintw(window, &feed.name);
         }
@@ -50,18 +48,9 @@ impl Window {
         /* Clear the screen */
         ncurses::refresh();
         for (index, feed) in model.subscriptions.iter().enumerate() {
-//            let window = ncurses::newwin(10, 10, index as i32, 10);
-//            self.feed_windows.push(window);
-//            if self.active_sub == index as i32 {
-//                ncurses::wattron(window, ncurses::A_BOLD());
-//                ncurses::wprintw(window, &feed.name);
-//                ncurses::wattroff(window, ncurses::A_BOLD());
-//            } else {
-//                ncurses::wprintw(window, &feed.name);
-//            }
-//            ncurses::wrefresh(window);
             let window = self.create_window_row_feed(&feed, index as i32);
             self.feed_windows.push(window);
         }
     }
 }
+
