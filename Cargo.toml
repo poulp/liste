@@ -2,6 +2,8 @@
 name = "liste"
 version = "0.0.1"
 authors = ["poulp <amathieu@protonmail.com>"]
+description = "RSS reader for terminal with rust and ncurses"
+licence = "WTFPL"
 
 [dependencies]
 ncurses = "5.85.0"
