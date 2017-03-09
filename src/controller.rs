@@ -40,9 +40,9 @@ impl Controller {
         /* Add subscriptions */
         for line in buffer.lines() {
             let url = line.unwrap();
-            let feed = feed::FeedBuilder::read_from_url(url).finalize();
-            let channel = feed.channel();
-            list_model.add_feed(channel.title());
+        //    let feed = feed::FeedBuilder::read_from_url(url).finalize();
+          //  let channel = feed.channel();
+            list_model.add_feed(url.to_string());
         }
 
         Controller {
