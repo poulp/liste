@@ -4,6 +4,7 @@ extern crate feed;
 use window::Window;
 use model::{ListModel, Subscription};
 
+use std::process;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::fs::File;
@@ -29,9 +30,12 @@ impl Controller {
         let display = path.display();
 
         let mut file = match File::open(&path) {
-            // The `description` method of `io::Error` returns a string that
-            // describes the error
-            Err(why) => panic!("couldn't open"),
+            Err(why) => {
+                // Quit ncurses
+                ncurses::endwin();
+                println!("File not found");
+                process::exit(1)
+            },
             Ok(file) => file
         };
         
