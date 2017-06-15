@@ -16,6 +16,7 @@ pub struct Controller {
 }
 
 impl Controller {
+
     pub fn new() -> Controller {
 
         let total_width = ncurses::COLS();
@@ -24,28 +25,36 @@ impl Controller {
         let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
         let mut list_model = ListModel::new();
 
-        /* Read urls file */
-        // Create a path to the desired file
+        /* Urls file */
         let path = Path::new("feeds");
         let display = path.display();
 
+        /* Open urls file */
         let mut file = match File::open(&path) {
+            Ok(file) => file,
             Err(why) => {
                 // Quit ncurses
                 ncurses::endwin();
-                println!("File not found");
+                match path.to_str() {
+                    Some(s) => {
+                        println!("There is a problem with the urls file at {} :\n {}", s, why);
+                    },
+                    None => {
+                        println!("There is a problem with the urls file :\n {}", why);
+                    }
+                }
                 process::exit(1)
             },
-            Ok(file) => file
         };
-        
+
         let buffer = BufReader::new(file);
 
-        /* Add subscriptions */
+        /* Extract feeds urls */
         for line in buffer.lines() {
             let url = line.unwrap();
-        //    let feed = feed::FeedBuilder::read_from_url(url).finalize();
-          //  let channel = feed.channel();
+            //    let feed = feed::FeedBuilder::read_from_url(url).finalize();
+            //  let channel = feed.channel();
+            /* Add subscription to the model */
             list_model.add_feed(url.to_string());
         }
 

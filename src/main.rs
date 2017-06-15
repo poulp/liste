@@ -1,6 +1,6 @@
 extern crate ncurses;
-
 extern crate liste;
+
 use liste::controller::Controller;
 use liste::window::Window;
 use liste::model::Subscription;
@@ -51,6 +51,7 @@ fn main() {
 //    let mut controller = Controller::new(&mut feed_window, &list_model);
     let mut controller = Controller::new();
 
+    /* Controller initilization */
     controller.on_init();
 
     /* Event loop */
