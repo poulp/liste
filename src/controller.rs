@@ -54,8 +54,6 @@ impl ControllerSubscriptions {
         /* Extract feeds urls */
         for line in buffer.lines() {
             let url = line.unwrap();
-            //    let feed = feed::FeedBuilder::read_from_url(url).finalize();
-            //  let channel = feed.channel();
             /* Add subscription to the model */
             list_model.add_feed(url.to_string());
         }
@@ -74,7 +72,7 @@ impl ControllerSubscriptions {
         self.window.draw(&self.model);
     }
 
-    pub fn on_next_active_sub(&mut self){
+    pub fn on_key_down(&mut self){
         if !self.model.subscriptions.is_empty() {
             if self.window.active_sub + 1 < self.model.subscriptions.len() as i32 {
                 self.window.active_sub += 1;
@@ -83,7 +81,7 @@ impl ControllerSubscriptions {
         }
     }
 
-    pub fn on_previous_active_sub(&mut self){
+    pub fn on_key_up(&mut self){
         if !self.model.subscriptions.is_empty() {
             if self.window.active_sub - 1 >= 0 {
                 self.window.active_sub -= 1;

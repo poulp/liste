@@ -32,7 +32,6 @@ fn main() {
         .get_matches();
 
     /* Get settings */
-    //let args: Vec<String> = env::args().collect();
 
     let settings = Settings::new(matches).unwrap_or_else(|err| {
         println!("Problem with settings: {}", err);
@@ -76,11 +75,11 @@ fn main() {
         match ch {
             ncurses::KEY_DOWN => {
                 /* Go to the next sub */
-                controller.on_next_active_sub();
+                controller.on_key_down();
             },
             ncurses::KEY_UP => {
                 /* Go to the previous sub */
-                controller.on_previous_active_sub();
+                controller.on_key_up();
             },
             113 => break, // 'q' -> quit
             _ => {} // do nothing
