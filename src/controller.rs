@@ -3,6 +3,7 @@ extern crate feed;
 
 use window::Window;
 use model::{ListModel, Subscription};
+use settings::Settings;
 
 use std::process;
 use std::io::BufReader;
@@ -17,7 +18,7 @@ pub struct Controller {
 
 impl Controller {
 
-    pub fn new() -> Controller {
+    pub fn new(settings: &Settings) -> Controller {
 
         let total_width = ncurses::COLS();
         let total_height = ncurses::LINES();
@@ -26,7 +27,7 @@ impl Controller {
         let mut list_model = ListModel::new();
 
         /* Urls file */
-        let path = Path::new("feeds");
+        let path = Path::new(&settings.settings_file);
         let display = path.display();
 
         /* Open urls file */

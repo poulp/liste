@@ -1,19 +1,46 @@
+extern crate clap;
 extern crate ncurses;
 extern crate liste;
 
+use liste::settings::Settings;
 use liste::controller::Controller;
 use liste::window::Window;
 use liste::model::Subscription;
 use liste::model::ListModel;
 
+use std::env;
 use std::fmt::Debug;
 use std::process;
 use std::time::{Duration, Instant};
 use std::thread;
 
+use clap::App;
+use clap::Arg;
+
+static VERSION: &str = "0.0.1";
 static COLOR_BACKGROUND: i16 = 16;
+const MS_PER_FRAME: u64 = 60;
 
 fn main() {
+
+    let matches = App::new("Liste")
+        .version(VERSION)
+        .arg(Arg::with_name("settings")
+            .short("s")
+            .long("settings")
+            .value_name("FILE")
+            .help("Sets a custom settings file")
+            .takes_value(true))
+        .get_matches();
+
+    /* Get settings */
+    //let args: Vec<String> = env::args().collect();
+
+    let settings = Settings::new(matches).unwrap_or_else(|err| {
+        println!("Problem with settings: {}", err);
+        process::exit(1);
+    });
+
     // Start ncurses
     ncurses::initscr();
 
@@ -35,21 +62,8 @@ fn main() {
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
 
 
-    const MS_PER_FRAME: u64 = 60;
 
-
-
-//    let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
-//
-//
-//    let sub_1 = Subscription::new("monflux".to_string());
-//    let sub_2 = Subscription::new("monflux number 2".to_string());
-//    let mut list_model = ListModel::new();
-//    list_model.add_feed(&sub_1);
-//    list_model.add_feed(&sub_2);
-//
-//    let mut controller = Controller::new(&mut feed_window, &list_model);
-    let mut controller = Controller::new();
+    let mut controller = Controller::new(&settings);
 
     /* Controller initilization */
     controller.on_init();
