@@ -1,7 +1,8 @@
 extern crate ncurses;
 extern crate feed;
 
-use window::Window;
+use window::WindowSubscriptions;
+use window::WindowStatusBar;
 use model::{ListModel, Subscription};
 use settings::Settings;
 
@@ -11,19 +12,19 @@ use std::io::BufRead;
 use std::fs::File;
 use std::path::Path;
 
-pub struct Controller {
-    window: Window,
+pub struct ControllerSubscriptions {
+    window: WindowSubscriptions,
     model: ListModel
 }
 
-impl Controller {
+impl ControllerSubscriptions {
 
-    pub fn new(settings: &Settings) -> Controller {
+    pub fn new(settings: &Settings) -> ControllerSubscriptions {
 
         let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES();
+        let total_height = ncurses::LINES() - 4;
 
-        let mut feed_window = Window::new("feed".to_string(), total_width, total_height);
+        let mut feed_window = WindowSubscriptions::new("feed".to_string(), total_width, total_height);
         let mut list_model = ListModel::new();
 
         /* Urls file */
@@ -59,7 +60,7 @@ impl Controller {
             list_model.add_feed(url.to_string());
         }
 
-        Controller {
+        ControllerSubscriptions {
             window: feed_window,
             model: list_model
         }
@@ -92,3 +93,28 @@ impl Controller {
     }
 }
 
+pub struct ControllerStatusBar {
+    window: WindowStatusBar
+}
+
+impl ControllerStatusBar {
+    pub fn new(settings: &Settings) -> ControllerStatusBar {
+        let total_width = ncurses::COLS();
+        let total_height = ncurses::LINES();
+
+        let mut window = WindowStatusBar::new();
+
+        ControllerStatusBar {
+            window: window,
+        }
+    }
+
+    /*************************
+     * CALLBACK
+     ************************/
+
+    pub fn on_init(&mut self) {
+        self.window.draw();
+    }
+
+}

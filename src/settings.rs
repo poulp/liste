@@ -2,7 +2,7 @@ extern crate clap;
 
 use clap::ArgMatches;
 
-static SETTINGS_FILE: &str = "$HOME/.config/liste/settings.yml";
+const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
 
 pub struct Settings {
     pub settings_file: String

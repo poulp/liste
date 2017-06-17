@@ -3,10 +3,8 @@ extern crate ncurses;
 extern crate liste;
 
 use liste::settings::Settings;
-use liste::controller::Controller;
-use liste::window::Window;
-use liste::model::Subscription;
-use liste::model::ListModel;
+use liste::controller::ControllerSubscriptions;
+use liste::controller::ControllerStatusBar;
 
 use std::env;
 use std::fmt::Debug;
@@ -17,8 +15,8 @@ use std::thread;
 use clap::App;
 use clap::Arg;
 
-static VERSION: &str = "0.0.1";
-static COLOR_BACKGROUND: i16 = 16;
+const VERSION: &str = "0.0.1";
+const COLOR_BACKGROUND: i16 = 16;
 const MS_PER_FRAME: u64 = 60;
 
 fn main() {
@@ -63,10 +61,12 @@ fn main() {
 
 
 
-    let mut controller = Controller::new(&settings);
+    let mut controller = ControllerSubscriptions::new(&settings);
+    let mut controller_status_bar = ControllerStatusBar::new(&settings);
 
     /* Controller initilization */
     controller.on_init();
+    controller_status_bar.on_init();
 
     /* Event loop */
     loop {

@@ -2,15 +2,15 @@ extern crate ncurses;
 
 use model::{ListModel, Subscription};
 
-pub struct Window {
+pub struct WindowSubscriptions {
     pub name: String,
     pub active_sub: i32,
     feed_windows: Vec<ncurses::WINDOW>
 }
 
-impl Window {
-    pub fn new(name: String, width: i32, height: i32) -> Window {
-        Window {
+impl WindowSubscriptions {
+    pub fn new(name: String, width: i32, height: i32) -> WindowSubscriptions {
+        WindowSubscriptions {
             name: name,
             active_sub: 0,
             feed_windows: vec![]
@@ -54,3 +54,30 @@ impl Window {
     }
 }
 
+pub struct WindowStatusBar {
+    window: ncurses::WINDOW
+}
+
+impl WindowStatusBar {
+    pub fn new() -> WindowStatusBar {
+        let total_width = ncurses::COLS() - 1;
+        let total_height = 2;
+        let startx = 1;
+        let starty = ncurses::LINES() - 2;
+        ncurses::refresh();
+
+        let window = ncurses::newwin(total_height, total_width, starty, startx);
+        ncurses::box_(window, 0, 0);
+        ncurses::wprintw(window, "status");
+        ncurses::wrefresh(window);
+        ncurses::refresh();
+
+        WindowStatusBar {
+            window: window
+        }
+    }
+
+    pub fn draw(&mut self){
+        ncurses::refresh();
+    }
+}
