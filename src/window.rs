@@ -81,3 +81,31 @@ impl WindowStatusBar {
         ncurses::refresh();
     }
 }
+
+pub struct WindowFeeds {
+    window: ncurses::WINDOW
+}
+
+impl WindowFeeds {
+    pub fn new() -> WindowFeeds {
+        let total_width = ncurses::COLS() - 1;
+        let total_height = ncurses::LINES();
+        let startx = 1;
+        let starty = ncurses::LINES() - 2;
+        ncurses::refresh();
+
+        let window = ncurses::newwin(total_height, total_width, starty, startx);
+        ncurses::box_(window, 0, 0);
+        ncurses::wprintw(window, "feeds");
+        ncurses::wrefresh(window);
+        ncurses::refresh();
+
+        WindowFeeds {
+            window: window
+        }
+    }
+
+    pub fn draw(&mut self){
+        ncurses::refresh();
+    }
+}

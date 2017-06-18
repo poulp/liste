@@ -3,8 +3,11 @@ extern crate ncurses;
 extern crate liste;
 
 use liste::settings::Settings;
+use liste::controller::Controller;
 use liste::controller::ControllerSubscriptions;
 use liste::controller::ControllerStatusBar;
+use liste::controller::ControllerFeeds;
+use liste::screen::Screen;
 
 use std::env;
 use std::fmt::Debug;
@@ -58,31 +61,16 @@ fn main() {
     //ncurses::init_color(COLOR_BACKGROUND, 0, 43 * 4, 54 * 4);
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
 
+    let mut screen = Screen::new(&settings);
 
-
-    let mut controller = ControllerSubscriptions::new(&settings);
-    let mut controller_status_bar = ControllerStatusBar::new(&settings);
-
-    /* Controller initilization */
-    controller.on_init();
-    controller_status_bar.on_init();
-
+    screen.on_init();
     /* Event loop */
     loop {
         //let start = Instant::now();
         /* getch is async */
         let ch = ncurses::getch();
-        match ch {
-            ncurses::KEY_DOWN => {
-                /* Go to the next sub */
-                controller.on_key_down();
-            },
-            ncurses::KEY_UP => {
-                /* Go to the previous sub */
-                controller.on_key_up();
-            },
-            113 => break, // 'q' -> quit
-            _ => {} // do nothing
+        if screen.get_input(ch, &settings) {
+            break;
         }
         //let end = Instant::now();
         //let sleep_time = start.elapsed().as_secs() + MS_PER_FRAME - end.elapsed().as_secs();

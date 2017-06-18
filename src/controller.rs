@@ -3,6 +3,7 @@ extern crate feed;
 
 use window::WindowSubscriptions;
 use window::WindowStatusBar;
+use window::WindowFeeds;
 use model::{ListModel, Subscription};
 use settings::Settings;
 
@@ -12,13 +13,19 @@ use std::io::BufRead;
 use std::fs::File;
 use std::path::Path;
 
+pub trait Controller {
+    //fn new(settings: &Settings) -> Self;
+    fn on_init(&mut self);
+    fn on_key_down(&mut self);
+    fn on_key_up(&mut self);
+}
+
 pub struct ControllerSubscriptions {
     window: WindowSubscriptions,
     model: ListModel
 }
 
 impl ControllerSubscriptions {
-
     pub fn new(settings: &Settings) -> ControllerSubscriptions {
 
         let total_width = ncurses::COLS();
@@ -63,16 +70,19 @@ impl ControllerSubscriptions {
             model: list_model
         }
     }
+}
+
+impl Controller for ControllerSubscriptions {
 
     /*************************
      * CALLBACK
      ************************/
 
-    pub fn on_init(&mut self) {
+    fn on_init(&mut self) {
         self.window.draw(&self.model);
     }
 
-    pub fn on_key_down(&mut self){
+    fn on_key_down(&mut self){
         if !self.model.subscriptions.is_empty() {
             if self.window.active_sub + 1 < self.model.subscriptions.len() as i32 {
                 self.window.active_sub += 1;
@@ -81,7 +91,7 @@ impl ControllerSubscriptions {
         }
     }
 
-    pub fn on_key_up(&mut self){
+    fn on_key_up(&mut self){
         if !self.model.subscriptions.is_empty() {
             if self.window.active_sub - 1 >= 0 {
                 self.window.active_sub -= 1;
@@ -106,13 +116,55 @@ impl ControllerStatusBar {
             window: window,
         }
     }
+}
+
+impl Controller for ControllerStatusBar {
+
 
     /*************************
      * CALLBACK
      ************************/
 
-    pub fn on_init(&mut self) {
+    fn on_init(&mut self) {
         self.window.draw();
     }
+
+    fn on_key_down(&mut self){}
+
+    fn on_key_up(&mut self){}
+
+}
+
+pub struct ControllerFeeds {
+    window: WindowFeeds
+}
+
+impl ControllerFeeds {
+    pub fn new(settings: &Settings) -> ControllerFeeds {
+        let total_width = ncurses::COLS();
+        let total_height = ncurses::LINES();
+
+        let mut window = WindowFeeds::new();
+
+        ControllerFeeds {
+            window: window,
+        }
+    }
+}
+
+impl Controller for ControllerFeeds {
+
+
+    /*************************
+     * CALLBACK
+     ************************/
+
+    fn on_init(&mut self) {
+        self.window.draw();
+    }
+
+    fn on_key_down(&mut self){}
+
+    fn on_key_up(&mut self){}
 
 }
