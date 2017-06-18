@@ -3,7 +3,7 @@ extern crate feed;
 
 use window::WindowSubscriptions;
 use window::WindowStatusBar;
-use window::WindowFeeds;
+use window::WindowListView;
 use model::{ListModel, Subscription};
 use settings::Settings;
 
@@ -136,18 +136,25 @@ impl Controller for ControllerStatusBar {
 }
 
 pub struct ControllerFeeds {
-    window: WindowFeeds
+    window: WindowListView,
+    url: String,
+    feeds: Vec<String>
 }
 
 impl ControllerFeeds {
-    pub fn new(settings: &Settings) -> ControllerFeeds {
+    pub fn new(settings: &Settings, url: String) -> ControllerFeeds {
         let total_width = ncurses::COLS();
         let total_height = ncurses::LINES();
 
-        let mut window = WindowFeeds::new();
+        let mut window = WindowListView::new();
 
         ControllerFeeds {
             window: window,
+            feeds: vec![
+                String::from("salut"),
+                String::from("test")
+            ],
+            url: url
         }
     }
 }
@@ -160,7 +167,7 @@ impl Controller for ControllerFeeds {
      ************************/
 
     fn on_init(&mut self) {
-        self.window.draw();
+        self.window.draw(&self.feeds);
     }
 
     fn on_key_down(&mut self){}

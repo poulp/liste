@@ -7,16 +7,14 @@ use controller::ControllerFeeds;
 use settings::Settings;
 
 pub struct Screen{
-    controllers: Vec<Box<Controller>>,
+    display: Box<Controller>,
     status_bar: ControllerStatusBar
 }
 
 impl Screen {
     pub fn new(settings: &Settings) -> Screen {
         Screen {
-            controllers: vec![
-                Box::new(ControllerSubscriptions::new(&settings))
-            ],
+            display: Box::new(ControllerSubscriptions::new(&settings)),
             status_bar: ControllerStatusBar::new(&settings)
         }
     }
@@ -31,39 +29,37 @@ impl Screen {
                 self.on_key_up();
             },
             10 => {
-                self.controllers.clear();
-                self.controllers.push(
-                    Box::new(
-                        ControllerFeeds::new(&settings)
-                    )
-                )
+                self.on_key_enter(settings);
             },
             113 => {
                 return true;
             }, // 'q' -> quit
-            _ => {} // do nothing
+            _ => {
+            } // do nothing
         }
         return false;
     }
 
     pub fn on_init(&mut self) {
-        for controller in self.controllers.iter_mut() {
-            controller.on_init();
-        }
+        self.display.on_init();
         self.status_bar.on_init();
     }
 
     fn on_key_down(&mut self) {
-        for controller in self.controllers.iter_mut() {
-            controller.on_key_down();
-        }
+        self.display.on_key_down();
         self.status_bar.on_key_down();
     }
 
     fn on_key_up(&mut self) {
-        for controller in self.controllers.iter_mut() {
-            controller.on_key_up();
-        }
+        self.display.on_key_up();
         self.status_bar.on_key_up();
+    }
+
+    fn on_key_enter(&mut self, settings: &Settings) {
+        ncurses::clear();
+        self.display = Box::new(
+            ControllerFeeds::new(&settings, String::from("test"))
+        );
+        self.display.on_init();
     }
 }
