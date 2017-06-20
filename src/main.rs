@@ -3,14 +3,8 @@ extern crate ncurses;
 extern crate liste;
 
 use liste::settings::Settings;
-use liste::controller::Controller;
-use liste::controller::ControllerSubscriptions;
-use liste::controller::ControllerStatusBar;
-use liste::controller::ControllerFeeds;
 use liste::screen::Screen;
 
-use std::env;
-use std::fmt::Debug;
 use std::process;
 use std::time::{Duration, Instant};
 use std::thread;
@@ -19,7 +13,7 @@ use clap::App;
 use clap::Arg;
 
 const VERSION: &str = "0.0.1";
-const COLOR_BACKGROUND: i16 = 16;
+//const COLOR_BACKGROUND: i16 = 16;
 const MS_PER_FRAME: u64 = 60;
 
 fn main() {

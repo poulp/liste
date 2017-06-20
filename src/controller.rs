@@ -1,10 +1,10 @@
 extern crate ncurses;
 extern crate feed;
 
-use window::WindowSubscriptions;
 use window::WindowStatusBar;
 use window::WindowListView;
-use model::{ListModel, Subscription};
+use models::subscriptions::{Subscription, ListSubscriptions};
+use models::feeds::{Feed, ListFeeds};
 use settings::Settings;
 
 use std::process;
@@ -14,92 +14,12 @@ use std::fs::File;
 use std::path::Path;
 
 pub trait Controller {
-    //fn new(settings: &Settings) -> Self;
     fn on_init(&mut self);
     fn on_key_down(&mut self);
     fn on_key_up(&mut self);
+    fn on_key_enter(&mut self);
 }
 
-pub struct ControllerSubscriptions {
-    window: WindowSubscriptions,
-    model: ListModel
-}
-
-impl ControllerSubscriptions {
-    pub fn new(settings: &Settings) -> ControllerSubscriptions {
-
-        let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES() - 4;
-
-        let mut feed_window = WindowSubscriptions::new("feed".to_string(), total_width, total_height);
-        let mut list_model = ListModel::new();
-
-        /* Urls file */
-        let path = Path::new(&settings.settings_file);
-        let display = path.display();
-
-        /* Open urls file */
-        let mut file = match File::open(&path) {
-            Ok(file) => file,
-            Err(why) => {
-                // Quit ncurses
-                ncurses::endwin();
-                match path.to_str() {
-                    Some(s) => {
-                        println!("There is a problem with the urls file at {} :\n {}", s, why);
-                    },
-                    None => {
-                        println!("There is a problem with the urls file :\n {}", why);
-                    }
-                }
-                process::exit(1)
-            },
-        };
-
-        let buffer = BufReader::new(file);
-
-        /* Extract feeds urls */
-        for line in buffer.lines() {
-            let url = line.unwrap();
-            /* Add subscription to the model */
-            list_model.add_feed(url.to_string());
-        }
-
-        ControllerSubscriptions {
-            window: feed_window,
-            model: list_model
-        }
-    }
-}
-
-impl Controller for ControllerSubscriptions {
-
-    /*************************
-     * CALLBACK
-     ************************/
-
-    fn on_init(&mut self) {
-        self.window.draw(&self.model);
-    }
-
-    fn on_key_down(&mut self){
-        if !self.model.subscriptions.is_empty() {
-            if self.window.active_sub + 1 < self.model.subscriptions.len() as i32 {
-                self.window.active_sub += 1;
-                self.window.draw(&self.model);
-            }
-        }
-    }
-
-    fn on_key_up(&mut self){
-        if !self.model.subscriptions.is_empty() {
-            if self.window.active_sub - 1 >= 0 {
-                self.window.active_sub -= 1;
-                self.window.draw(&self.model);
-            }
-        }
-    }
-}
 
 pub struct ControllerStatusBar {
     window: WindowStatusBar
@@ -133,45 +53,169 @@ impl Controller for ControllerStatusBar {
 
     fn on_key_up(&mut self){}
 
+    fn on_key_enter(&mut self){
+        self.window.draw();
+    }
+
 }
 
-pub struct ControllerFeeds {
-    window: WindowListView,
-    url: String,
-    feeds: Vec<String>
+pub struct MainDisplayControllers {
+    window_subscriptions: WindowListView,
+    window_feeds: WindowListView,
+
+    subscriptions: ListSubscriptions,
+    feeds: ListFeeds,
+
+    /* possible values :
+     *  - subscriptions
+     *  - feeds
+     *  - read
+     */
+    // TODO find a better way
+    current_window: String
 }
 
-impl ControllerFeeds {
-    pub fn new(settings: &Settings, url: String) -> ControllerFeeds {
+impl MainDisplayControllers {
+    pub fn new(settings: &Settings) -> MainDisplayControllers {
+
         let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES();
+        let total_height = ncurses::LINES() - 4;
 
-        let mut window = WindowListView::new();
+        //let mut feed_window = WindowSubscriptions::new("feed".to_string(), total_width, total_height);
+        let mut list_model = ListSubscriptions::new();
+        let mut feeds = ListFeeds::new();
+        feeds.add_feed(String::from("test"));
+        feeds.add_feed(String::from("salut"));
 
-        ControllerFeeds {
-            window: window,
-            feeds: vec![
-                String::from("salut"),
-                String::from("test")
-            ],
-            url: url
+        /* Urls file */
+        let path = Path::new(&settings.settings_file);
+        //let display = path.display();
+
+        /* Open urls file */
+        let mut file = match File::open(&path) {
+            Ok(file) => file,
+            Err(why) => {
+                // Quit ncurses
+                ncurses::endwin();
+                match path.to_str() {
+                    Some(s) => {
+                        println!("There is a problem with the urls file at {} :\n {}", s, why);
+                    },
+                    None => {
+                        println!("There is a problem with the urls file :\n {}", why);
+                    }
+                }
+                process::exit(1)
+            },
+        };
+
+        let buffer = BufReader::new(file);
+
+        /* Extract feeds urls */
+        for line in buffer.lines() {
+            let url = line.unwrap();
+            /* Add subscription to the model */
+            list_model.add_subscription(url.to_string());
+        }
+
+        MainDisplayControllers {
+            window_subscriptions: WindowListView::new(),
+            window_feeds: WindowListView::new(),
+            subscriptions: list_model,
+            feeds: feeds,
+            current_window: String::from("subscriptions")
+        }
+    }
+
+    fn draw(&mut self) {
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                self.window_subscriptions.draw(&self.subscriptions.subscriptions);
+            },
+            "feeds" => {
+                self.window_feeds.draw(&self.feeds.feeds);
+            },
+            "read" => {
+                // TODO
+            },
+            _ => {}
         }
     }
 }
 
-impl Controller for ControllerFeeds {
-
-
-    /*************************
-     * CALLBACK
-     ************************/
-
+impl Controller for MainDisplayControllers {
     fn on_init(&mut self) {
-        self.window.draw(&self.feeds);
+        self.window_subscriptions.draw(&self.subscriptions.subscriptions);
     }
 
-    fn on_key_down(&mut self){}
+    fn on_key_down(&mut self) {
+        // TODO move to window ?
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                if !self.subscriptions.subscriptions.is_empty() {
+                    if self.window_subscriptions.active_item + 1 < self.subscriptions.subscriptions.len() as i32 {
+                        self.window_subscriptions.active_item += 1;
+                        self.draw();
+                    }
+                }
+            },
+            "feeds" => {
+                if !self.feeds.feeds.is_empty() {
+                    if self.window_feeds.active_item + 1 < self.feeds.feeds.len() as i32 {
+                        self.window_feeds.active_item += 1;
+                        self.draw();
+                    }
+                }
+            },
+            "read" => {
+                // TODO
+            },
+            _ => {}
+        }
+    }
 
-    fn on_key_up(&mut self){}
+    fn on_key_up(&mut self) {
+        // TODO move to window ?
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                if !self.subscriptions.subscriptions.is_empty() {
+                    if self.window_subscriptions.active_item - 1 >= 0 {
+                        self.window_subscriptions.active_item -= 1;
+                        self.draw();
+                    }
+                }
+            },
+            "feeds" => {
+                if !self.feeds.feeds.is_empty() {
+                    if self.window_feeds.active_item - 1 >= 0 {
+                        self.window_feeds.active_item -= 1;
+                        self.draw();
+                    }
+                }
+            },
+            "read" => {
+                // TODO
+            },
+            _ => {}
+        }
+    }
 
+
+    fn on_key_enter(&mut self) {
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                self.current_window = String::from("feeds")
+            },
+            "feeds" => {
+                self.current_window = String::from("read")
+            },
+            "read" => {
+                // nothing happen here
+            },
+            _ => {
+                self.current_window = String::from("subscriptions")
+            }
+        }
+        self.draw();
+    }
 }
