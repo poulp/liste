@@ -1,11 +1,19 @@
 extern crate ncurses;
-extern crate feed;
 
-use window::WindowStatusBar;
-use window::WindowListView;
-use models::subscriptions::{Subscription, ListSubscriptions};
-use models::feeds::{Feed, ListFeeds};
-use settings::Settings;
+use super::Controller;
+use super::super::window::{
+    WindowList,
+    WindowText
+};
+use super::super::models::subscriptions::{
+    Subscription,
+    ListSubscriptions
+};
+use super::super::models::feeds::{
+    Feed,
+    ListFeeds
+};
+use super::super::settings::Settings;
 
 use std::process;
 use std::io::BufReader;
@@ -13,58 +21,15 @@ use std::io::BufRead;
 use std::fs::File;
 use std::path::Path;
 
-pub trait Controller {
-    fn on_init(&mut self);
-    fn on_key_down(&mut self);
-    fn on_key_up(&mut self);
-    fn on_key_enter(&mut self);
-}
-
-
-pub struct ControllerStatusBar {
-    window: WindowStatusBar
-}
-
-impl ControllerStatusBar {
-    pub fn new(settings: &Settings) -> ControllerStatusBar {
-        let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES();
-
-        let mut window = WindowStatusBar::new();
-
-        ControllerStatusBar {
-            window: window,
-        }
-    }
-}
-
-impl Controller for ControllerStatusBar {
-
-
-    /*************************
-     * CALLBACK
-     ************************/
-
-    fn on_init(&mut self) {
-        self.window.draw();
-    }
-
-    fn on_key_down(&mut self){}
-
-    fn on_key_up(&mut self){}
-
-    fn on_key_enter(&mut self){
-        self.window.draw();
-    }
-
-}
 
 pub struct MainDisplayControllers {
-    window_subscriptions: WindowListView,
-    window_feeds: WindowListView,
+    window_subscriptions: WindowList,
+    window_feeds: WindowList,
+    window_feed: WindowText,
 
     subscriptions: ListSubscriptions,
     feeds: ListFeeds,
+    feed: String,
 
     /* possible values :
      *  - subscriptions
@@ -119,15 +84,18 @@ impl MainDisplayControllers {
         }
 
         MainDisplayControllers {
-            window_subscriptions: WindowListView::new(),
-            window_feeds: WindowListView::new(),
+            window_subscriptions: WindowList::new(),
+            window_feeds: WindowList::new(),
+            window_feed: WindowText::new(),
             subscriptions: list_model,
             feeds: feeds,
+            feed: String::from("--"),
             current_window: String::from("subscriptions")
         }
     }
 
     fn draw(&mut self) {
+        self.window_subscriptions.clear();
         match self.current_window.as_ref() {
             "subscriptions" => {
                 self.window_subscriptions.draw(&self.subscriptions.subscriptions);
@@ -136,10 +104,14 @@ impl MainDisplayControllers {
                 self.window_feeds.draw(&self.feeds.feeds);
             },
             "read" => {
-                // TODO
+                self.window_feed.draw(self.feed.as_ref())
             },
             _ => {}
         }
+    }
+
+    fn clear_windows(&mut self, to: String) {
+        self.window_subscriptions.clear();
     }
 }
 
@@ -168,7 +140,7 @@ impl Controller for MainDisplayControllers {
                 }
             },
             "read" => {
-                // TODO
+                // TODO scroll down
             },
             _ => {}
         }
@@ -194,28 +166,43 @@ impl Controller for MainDisplayControllers {
                 }
             },
             "read" => {
-                // TODO
+                // TODO scroll up
             },
             _ => {}
         }
     }
 
-
     fn on_key_enter(&mut self) {
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.current_window = String::from("feeds")
+                self.current_window = String::from("feeds");
+                self.draw();
             },
             "feeds" => {
-                self.current_window = String::from("read")
+                self.current_window = String::from("read");
+                self.draw();
             },
             "read" => {
                 // nothing happen here
             },
-            _ => {
-                self.current_window = String::from("subscriptions")
-            }
+            _ => {}
         }
-        self.draw();
+    }
+
+    fn on_key_previous(&mut self) {
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                // nothing here
+            },
+            "feeds" => {
+                self.current_window = String::from("subscriptions");
+                self.draw();
+            },
+            "read" => {
+                self.current_window = String::from("feeds");
+                self.draw();
+            },
+            _ => {}
+        }
     }
 }

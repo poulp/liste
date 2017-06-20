@@ -21,24 +21,22 @@ impl WindowStatusBar {
     }
 
     pub fn draw(&mut self){
-        ncurses::refresh();
-        //ncurses::box_(self.window, 0, 0);
+        //ncurses::wrefresh(self.window);
+        ncurses::box_(self.window, 0, 0);
         ncurses::wprintw(self.window, "status");
         ncurses::wrefresh(self.window);
         //ncurses::refresh();
     }
 }
 
-pub struct WindowListView {
-    windows: Vec<ncurses::WINDOW>,
+pub struct WindowList {
     pub active_item: i32
 }
 
-impl WindowListView {
-    pub fn new() -> WindowListView {
-        WindowListView {
+impl WindowList {
+    pub fn new() -> WindowList {
+        WindowList {
             active_item: 0,
-            windows: vec![]
         }
     }
 
@@ -51,6 +49,7 @@ impl WindowListView {
         let row_width = total_width;
 
         let window = ncurses::newwin(row_height, row_width, starty, startx);
+        ncurses::refresh();
         if self.active_item == index {
             ncurses::wbkgd(window, ncurses::COLOR_PAIR(1));
             ncurses::wprintw(window, item.get_name());
@@ -58,34 +57,34 @@ impl WindowListView {
             ncurses::wprintw(window, item.get_name());
         }
         ncurses::wrefresh(window);
-        ncurses::refresh();
         window
     }
 
     pub fn draw<I: TraitListViewItem>(&mut self, list: &Vec<I>) {
-        /* Clean the windows feed list */
-        self.windows.clear();
-        /* Clear the screen */
-        ncurses::refresh();
         for (index, feed) in list.iter().enumerate() {
             let window = self.create_window_row(feed, index as i32);
-            self.windows.push(window);
         }
+    }
+
+    pub fn clear(&mut self) {
+        let window = ncurses::newwin(ncurses::LINES() - 2, ncurses::COLS(), 1, 1);
+        ncurses::wclear(window);
+        ncurses::wrefresh(window);
     }
 }
 
-pub struct WindowTextView {
+pub struct WindowText {
     window: ncurses::WINDOW,
 }
 
-impl WindowTextView {
-    pub fn new(text: String) -> WindowTextView {
+impl WindowText {
+    pub fn new() -> WindowText {
         let total_width = ncurses::COLS() - 1;
         let total_height = ncurses::LINES() - 2;
         let startx = 1;
-        let starty = 1;
+        let starty = 0;
 
-        WindowTextView {
+        WindowText {
             window: ncurses::newwin(
                 total_height,
                 total_width,
@@ -95,7 +94,8 @@ impl WindowTextView {
         }
     }
 
-    pub fn draw(&mut self, text: String) {
-        ncurses::wprintw(self.window, text.as_ref());
+    pub fn draw(&mut self, text: &str) {
+        ncurses::wprintw(self.window, text);
+        ncurses::wrefresh(self.window);
     }
 }

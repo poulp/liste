@@ -1,8 +1,8 @@
 extern crate ncurses;
 
-use controller::Controller;
-use controller::ControllerStatusBar;
-use controller::MainDisplayControllers;
+use controllers::Controller;
+use controllers::statusbar::ControllerStatusBar;
+use controllers::display::MainDisplayControllers;
 use settings::Settings;
 
 pub struct Screen{
@@ -30,6 +30,9 @@ impl Screen {
             10 => {
                 self.on_key_enter();
             },
+            114 => {
+                self.on_key_previous();
+            }
             113 => {
                 return true;
             }, // 'q' -> quit
@@ -57,5 +60,10 @@ impl Screen {
     fn on_key_enter(&mut self) {
         self.main_display.on_key_enter();
         self.status_bar.on_key_enter();
+    }
+
+    fn on_key_previous(&mut self) {
+        self.main_display.on_key_previous();
+        self.status_bar.on_key_previous();
     }
 }
