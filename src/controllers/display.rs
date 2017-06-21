@@ -1,10 +1,8 @@
 extern crate ncurses;
 
 use super::Controller;
-use super::super::window::{
-    WindowList,
-    WindowText
-};
+use super::super::windows::list::WindowList;
+use super::super::windows::text::WindowText;
 use super::super::models::subscriptions::{
     Subscription,
     ListSubscriptions
@@ -46,7 +44,6 @@ impl MainDisplayControllers {
         let total_width = ncurses::COLS();
         let total_height = ncurses::LINES() - 4;
 
-        //let mut feed_window = WindowSubscriptions::new("feed".to_string(), total_width, total_height);
         let mut list_model = ListSubscriptions::new();
         let mut feeds = ListFeeds::new();
         feeds.add_feed(String::from("test"));
@@ -54,7 +51,6 @@ impl MainDisplayControllers {
 
         /* Urls file */
         let path = Path::new(&settings.settings_file);
-        //let display = path.display();
 
         /* Open urls file */
         let mut file = match File::open(&path) {
@@ -89,7 +85,7 @@ impl MainDisplayControllers {
             window_feed: WindowText::new(),
             subscriptions: list_model,
             feeds: feeds,
-            feed: String::from("--"),
+            feed: String::from("--"), // Empty content
             current_window: String::from("subscriptions")
         }
     }

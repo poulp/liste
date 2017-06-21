@@ -5,4 +5,4 @@ pub mod controllers;
 pub mod models;
 pub mod settings;
 pub mod screen;
-pub mod window;
+pub mod windows;

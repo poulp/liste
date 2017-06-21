@@ -1,7 +1,7 @@
 extern crate ncurses;
 
 use super::Controller;
-use super::super::window::WindowStatusBar;
+use super::super::windows::statusbar::WindowStatusBar;
 use super::super::settings::Settings;
 
 pub struct ControllerStatusBar {
