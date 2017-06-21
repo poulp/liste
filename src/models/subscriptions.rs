@@ -1,5 +1,7 @@
 use super::listview::TraitListViewItem;
 
+use std::clone::Clone;
+
 pub struct Subscription {
     pub name: String,
 }
@@ -19,6 +21,14 @@ impl TraitListViewItem for Subscription {
     }
 }
 
+impl Clone for Subscription {
+    fn clone(&self) -> Self {
+        Subscription{
+            name: self.name.to_owned()
+        }
+    }
+}
+
 pub struct ListSubscriptions {
     pub subscriptions: Vec<Subscription>,
 }
@@ -34,5 +44,13 @@ impl ListSubscriptions {
     pub fn add_subscription(&mut self, name: String) {
         let sub = Subscription::new(name);
         self.subscriptions.push(sub);
+    }
+}
+
+impl Clone for ListSubscriptions {
+    fn clone(&self) -> Self {
+        ListSubscriptions{
+            subscriptions: self.subscriptions.clone()
+        }
     }
 }

@@ -31,13 +31,17 @@ impl Screen {
                 self.on_key_enter();
             },
             114 => {
+                // 'r'
                 self.on_key_previous();
+            },
+            114 => {
+                // 's' Sync
+                self.synchronize();
             }
             113 => {
                 return true;
             }, // 'q' -> quit
-            _ => {
-            } // do nothing
+            _ => {} // do nothing
         }
         return false;
     }
@@ -65,5 +69,9 @@ impl Screen {
     fn on_key_previous(&mut self) {
         self.main_display.on_key_previous();
         self.status_bar.on_key_previous();
+    }
+
+    fn synchronize(&self) {
+
     }
 }

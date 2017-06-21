@@ -13,13 +13,6 @@ use super::super::models::feeds::{
 };
 use super::super::settings::Settings;
 
-use std::process;
-use std::io::BufReader;
-use std::io::BufRead;
-use std::fs::File;
-use std::path::Path;
-
-
 pub struct MainDisplayControllers {
     window_subscriptions: WindowList,
     window_feeds: WindowList,
@@ -40,46 +33,17 @@ pub struct MainDisplayControllers {
 
 impl MainDisplayControllers {
     pub fn new(settings: &Settings) -> MainDisplayControllers {
-        let mut list_model = ListSubscriptions::new();
         let mut feeds = ListFeeds::new();
         feeds.add_feed(String::from("test"));
         feeds.add_feed(String::from("salut"));
-
-        /* Urls file */
-        let path = Path::new(&settings.settings_file);
-
-        /* Open urls file */
-        let mut file = match File::open(&path) {
-            Ok(file) => file,
-            Err(why) => {
-                // Quit ncurses
-                ncurses::endwin();
-                match path.to_str() {
-                    Some(s) => {
-                        println!("There is a problem with the urls file at {} :\n {}", s, why);
-                    },
-                    None => {
-                        println!("There is a problem with the urls file :\n {}", why);
-                    }
-                }
-                process::exit(1)
-            },
-        };
-
-        let buffer = BufReader::new(file);
-
-        /* Extract feeds urls */
-        for line in buffer.lines() {
-            let url = line.unwrap();
-            /* Add subscription to the model */
-            list_model.add_subscription(url.to_string());
-        }
+        /* Copy subscriptions from settings */
+        let mut subscriptions = settings.subscriptions.to_owned();
 
         MainDisplayControllers {
             window_subscriptions: WindowList::new(),
             window_feeds: WindowList::new(),
             window_feed: WindowText::new(),
-            subscriptions: list_model,
+            subscriptions: subscriptions,
             feeds: feeds,
             feed: String::from("--"), // Empty content
             current_window: String::from("subscriptions")
