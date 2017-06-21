@@ -20,7 +20,8 @@ impl WindowStatusBar {
     pub fn draw(&mut self){
         //ncurses::wrefresh(self.window);
         ncurses::box_(self.window, 0, 0);
-        ncurses::wprintw(self.window, "status");
+        //ncurses::wprintw(self.window, "status");
+        ncurses::mvwprintw(self.window,0 ,0 ,"status");
         ncurses::wrefresh(self.window);
         //ncurses::refresh();
     }

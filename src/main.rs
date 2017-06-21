@@ -56,7 +56,7 @@ fn main() {
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
 
     let mut screen = Screen::new(&settings);
-
+    ncurses::refresh();
     screen.on_init();
     /* Event loop */
     loop {

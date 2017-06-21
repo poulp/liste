@@ -40,10 +40,6 @@ pub struct MainDisplayControllers {
 
 impl MainDisplayControllers {
     pub fn new(settings: &Settings) -> MainDisplayControllers {
-
-        let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES() - 4;
-
         let mut list_model = ListSubscriptions::new();
         let mut feeds = ListFeeds::new();
         feeds.add_feed(String::from("test"));
@@ -108,6 +104,8 @@ impl MainDisplayControllers {
 
     fn clear_windows(&mut self, to: String) {
         self.window_subscriptions.clear();
+        self.window_feeds.clear();
+        self.window_feed.clear();
     }
 }
 

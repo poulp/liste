@@ -15,19 +15,18 @@ impl WindowList {
 
     fn create_window_row<I: TraitListViewItem>(&self, item: &I, index: i32) -> ncurses::WINDOW {
         let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES() - 2;
+        let total_height = ncurses::LINES() - 3;
         let startx = 1;
         let starty = index;
         let row_height = 1;
         let row_width = total_width;
 
         let window = ncurses::newwin(row_height, row_width, starty, startx);
-        ncurses::refresh();
         if self.active_item == index {
             ncurses::wbkgd(window, ncurses::COLOR_PAIR(1));
-            ncurses::wprintw(window, item.get_name());
+            ncurses::mvwprintw(window, 0, 0, item.get_name());
         } else {
-            ncurses::wprintw(window, item.get_name());
+            ncurses::mvwprintw(window, 0, 0, item.get_name());
         }
         ncurses::wrefresh(window);
         window
@@ -40,7 +39,7 @@ impl WindowList {
     }
 
     pub fn clear(&mut self) {
-        let window = ncurses::newwin(ncurses::LINES() - 2, ncurses::COLS(), 1, 1);
+        let window = ncurses::newwin(ncurses::LINES() - 3, ncurses::COLS(), 0, 0);
         ncurses::wclear(window);
         ncurses::wrefresh(window);
     }

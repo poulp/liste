@@ -22,7 +22,12 @@ impl WindowText {
     }
 
     pub fn draw(&mut self, text: &str) {
-        ncurses::wprintw(self.window, text);
+        ncurses::mvwprintw(self.window, 0, 0, text);
+        ncurses::wrefresh(self.window);
+    }
+
+    pub fn clear(&mut self) {
+        ncurses::wclear(self.window);
         ncurses::wrefresh(self.window);
     }
 }

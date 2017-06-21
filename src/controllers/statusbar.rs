@@ -27,7 +27,9 @@ impl Controller for ControllerStatusBar {
         self.window.draw();
     }
 
-    fn on_key_down(&mut self){}
+    fn on_key_down(&mut self){
+        //self.window.draw();
+    }
 
     fn on_key_up(&mut self){}
 
