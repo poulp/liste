@@ -22,9 +22,17 @@ fn init_database(connection: &Connection, settings: &Settings) {
     /* Tables */
     connection.execute("
         CREATE TABLE IF NOT EXISTS subscription (
-        id              INTEGER PRIMARY KEY,
+        subscription_id INTEGER PRIMARY KEY,
         url             TEXT UNIQUE ON CONFLICT IGNORE,
         name            TEXT
+    )", &[]).unwrap();
+
+    connection.execute("
+        CREATE TABLE IF NOT EXISTS feed (
+        feed_id         INTEGER PRIMARY KEY,
+        content         TEXT,
+        subscription_id INTEGER,
+        FOREIGN KEY(subscription_id) REFERENCES subscription(subscription_id)
     )", &[]).unwrap();
 
     /* Register new subscriptions */
