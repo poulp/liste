@@ -13,7 +13,7 @@ impl ControllerStatusBar {
         let total_width = ncurses::COLS();
         let total_height = ncurses::LINES();
 
-        let mut window = WindowStatusBar::new();
+        let window = WindowStatusBar::new();
 
         ControllerStatusBar {
             window: window,

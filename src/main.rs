@@ -1,6 +1,7 @@
 extern crate clap;
 extern crate ncurses;
 extern crate liste;
+extern crate rusqlite;
 
 use liste::settings::Settings;
 use liste::screen::Screen;
@@ -11,10 +12,39 @@ use std::thread;
 
 use clap::App;
 use clap::Arg;
+use  rusqlite::Connection;
 
 const VERSION: &str = "0.0.1";
 //const COLOR_BACKGROUND: i16 = 16;
 const MS_PER_FRAME: u64 = 60;
+
+fn init_database(connection: &Connection, settings: &Settings) {
+    /* Tables */
+    connection.execute("
+        CREATE TABLE IF NOT EXISTS subscription (
+        id              INTEGER PRIMARY KEY,
+        url             TEXT UNIQUE ON CONFLICT IGNORE,
+        name            TEXT
+    )", &[]).unwrap();
+
+    /* Register new subscriptions */
+    for subscription in &settings.subscriptions.subscriptions {
+        connection.execute("
+            INSERT INTO subscription (url, name) VALUES (?1, ?2)",
+                           &[&subscription.url, &subscription.name]).unwrap();
+    }
+
+    /* Purge old subscriptions */
+    let mut stmt = connection.prepare("SELECT url FROM subscription").unwrap();
+    let rows = stmt.query_map(&[], |row| -> String {row.get(0)}).unwrap();
+    for row in rows {
+        let url = row.unwrap();
+        if !settings.subscriptions.has_subscription(&url) {
+            connection.execute("DELETE FROM subscription WHERE url = ?", &[&url]).unwrap();
+
+        }
+    }
+}
 
 fn main() {
 
@@ -29,11 +59,14 @@ fn main() {
         .get_matches();
 
     /* Get settings */
-
     let settings = Settings::new(matches).unwrap_or_else(|err| {
         println!("Problem with settings: {}", err);
         process::exit(1);
     });
+
+    /* Open database */
+    let db_connection = Connection::open("base.db").unwrap();
+    init_database(&db_connection, &settings);
 
     // Start ncurses
     ncurses::initscr();
@@ -73,4 +106,5 @@ fn main() {
 
     //Stop ncurses
     ncurses::endwin();
+    db_connection.close().unwrap();
 }

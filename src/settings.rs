@@ -35,7 +35,10 @@ impl Settings {
                 for line in buffer.lines() {
                     let url = line.unwrap();
                     /* Add subscription to the model */
-                    subscriptions.add_subscription(url.to_string());
+                    subscriptions.add_subscription(
+                        url.to_string(),
+                        url.to_string()
+                    );
                 }
                 /* Return settings */
                 Ok(Settings {

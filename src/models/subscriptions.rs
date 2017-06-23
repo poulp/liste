@@ -4,13 +4,15 @@ use std::clone::Clone;
 
 pub struct Subscription {
     pub name: String,
+    pub url: String
 }
 
 impl Subscription {
 
-    pub fn new(name: String) -> Subscription {
+    pub fn new(name: String, url: String) -> Subscription {
         Subscription {
-            name: name
+            name: name,
+            url: url
         }
     }
 }
@@ -24,7 +26,8 @@ impl TraitListViewItem for Subscription {
 impl Clone for Subscription {
     fn clone(&self) -> Self {
         Subscription{
-            name: self.name.to_owned()
+            name: self.name.to_owned(),
+            url: self.url.to_owned(),
         }
     }
 }
@@ -41,9 +44,13 @@ impl ListSubscriptions {
         }
     }
 
-    pub fn add_subscription(&mut self, name: String) {
-        let sub = Subscription::new(name);
+    pub fn add_subscription(&mut self, name: String, url: String) {
+        let sub = Subscription::new(name, url);
         self.subscriptions.push(sub);
+    }
+
+    pub fn has_subscription(&self, sub_name: &str) -> bool {
+        self.subscriptions.iter().any(|x| x.url == sub_name)
     }
 }
 

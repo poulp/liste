@@ -34,10 +34,10 @@ impl Screen {
                 // 'r'
                 self.on_key_previous();
             },
-            114 => {
+            115 => {
                 // 's' Sync
                 self.synchronize();
-            }
+            },
             113 => {
                 return true;
             }, // 'q' -> quit
