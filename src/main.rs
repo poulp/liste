@@ -3,60 +3,20 @@ extern crate ncurses;
 extern crate liste;
 extern crate rusqlite;
 
-use liste::settings::Settings;
-use liste::screen::Screen;
-
 use std::process;
 use std::time::{Duration, Instant};
 use std::thread;
-
 use clap::App;
 use clap::Arg;
 use rusqlite::Connection;
 
+use liste::settings::Settings;
+use liste::screen::Screen;
+use liste::database::init_database;
+
 const VERSION: &str = "0.0.1";
 //const COLOR_BACKGROUND: i16 = 16;
-const MS_PER_FRAME: u64 = 60;
-
-fn init_database(connection: &Connection, settings: &Settings) {
-    /* Tables */
-    connection.execute("
-        CREATE TABLE IF NOT EXISTS subscription (
-        subscription_id INTEGER PRIMARY KEY,
-        url             TEXT UNIQUE ON CONFLICT IGNORE,
-        name            TEXT
-    )", &[]).unwrap();
-
-    connection.execute("
-        CREATE TABLE IF NOT EXISTS feed (
-        feed_id         INTEGER PRIMARY KEY,
-        content         TEXT,
-        subscription_id INTEGER,
-        FOREIGN KEY(subscription_id) REFERENCES subscription(subscription_id)
-    )", &[]).unwrap();
-
-    /* Register new subscriptions */
-    for subscription in &settings.subscriptions.subscriptions {
-        connection.execute("
-            INSERT INTO subscription (url, name) VALUES (?1, ?2)",
-                           &[&subscription.url, &subscription.name]).unwrap();
-    }
-
-    /* Purge old subscriptions */
-    let mut stmt = connection.prepare("SELECT url FROM subscription").unwrap();
-    let rows = stmt.query_map(&[], |row| -> String {row.get(0)}).unwrap();
-    for row in rows {
-        let url = row.unwrap();
-        if !settings.subscriptions.has_subscription(&url) {
-            connection.execute("DELETE FROM subscription WHERE url = ?", &[&url]).unwrap();
-
-        }
-    }
-
-    connection.execute("
-            INSERT INTO feed (content, subscription_id) VALUES (?1, ?2)",
-                           &[&"lolmdr", &1]).unwrap();
-}
+const MS_PER_FRAME: u64 = 40;
 
 fn main() {
 

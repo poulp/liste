@@ -1,20 +1,22 @@
 use super::listview::TraitListViewItem;
 
 pub struct Feed {
-    pub name: String
+    pub title: String,
+    pub description: String
 }
 
 impl Feed {
-    pub fn new(name: String) -> Feed {
+    pub fn new(title: String, description: String) -> Feed {
         Feed {
-            name: name
+            title: title,
+            description: description
         }
     }
 }
 
 impl TraitListViewItem for Feed {
     fn get_name(&self) -> &str {
-        self.name.as_ref()
+        self.title.as_ref()
     }
 }
 
@@ -29,8 +31,7 @@ impl ListFeeds {
         }
     }
 
-    pub fn add_feed(&mut self, name: String) {
-        let feed = Feed::new(name);
+    pub fn add_feed(&mut self, feed: Feed) {
         self.feeds.push(feed);
     }
 

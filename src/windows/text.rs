@@ -1,5 +1,7 @@
 extern crate ncurses;
 
+use super::super::models::feeds::Feed;
+
 pub struct WindowText {
     window: ncurses::WINDOW,
 }
@@ -21,8 +23,8 @@ impl WindowText {
         }
     }
 
-    pub fn draw(&mut self, text: &str) {
-        ncurses::mvwprintw(self.window, 0, 0, text);
+    pub fn draw(&mut self, feed: &Feed) {
+        ncurses::mvwprintw(self.window, 0, 0, &feed.description);
         ncurses::wrefresh(self.window);
     }
 

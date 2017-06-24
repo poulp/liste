@@ -43,13 +43,7 @@ pub struct MainDisplayControllers<'a> {
 
 impl<'a> MainDisplayControllers<'a> {
     pub fn new(settings: &Settings, db_connection: &'a Connection) -> MainDisplayControllers<'a> {
-        /* Copy subscriptions from settings
-         * TODO get subscriptions from database
-         */
-        //let mut subscriptions = settings.subscriptions.to_owned();
-
         let mut subscriptions = get_subscriptions(db_connection);
-
         MainDisplayControllers {
             window_subscriptions: WindowList::new(),
             window_feeds: WindowList::new(),
@@ -80,7 +74,9 @@ impl<'a> MainDisplayControllers<'a> {
                 );
             },
             "read" => {
-                self.window_feed.draw(self.feed.as_ref())
+                // TODO work with reference
+                let feed = self.feeds.feeds.get(self.active_feed_index as usize).unwrap();
+                self.window_feed.draw(feed);
             },
             _ => {}
         }
@@ -180,7 +176,10 @@ impl<'a> Controller for MainDisplayControllers<'a> {
                 self.feeds.clear();
                 /* Get active subscription id */
                 // TODO improve here
-                let id_sub = self.subscriptions.subscriptions.get(self.active_subscription_index as usize).unwrap().id;
+                let id_sub = self.subscriptions.subscriptions
+                    .get(self.active_subscription_index as usize)
+                    .unwrap()
+                    .id;
                 self.feeds = get_feeds_from_subscription(
                     self.db_connection,
                     id_sub
