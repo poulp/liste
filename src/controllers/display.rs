@@ -3,7 +3,10 @@ extern crate rusqlite;
 
 use self::rusqlite::Connection;
 
-use super::super::database::get_subscriptions;
+use super::super::database::{
+    get_subscriptions,
+    get_feeds_from_subscription
+};
 use super::Controller;
 use super::super::windows::list::WindowList;
 use super::super::windows::text::WindowText;
@@ -33,6 +36,8 @@ pub struct MainDisplayControllers<'a> {
      */
     // TODO find a better way
     current_window: String,
+    active_subscription_index: i32,
+    active_feed_index: i32,
     db_connection: &'a Connection
 }
 
@@ -53,8 +58,9 @@ impl<'a> MainDisplayControllers<'a> {
             feeds: ListFeeds::new(),
             feed: String::from("--"), // Empty content
             current_window: String::from("subscriptions"),
-            db_connection: db_connection
-
+            db_connection: db_connection,
+            active_subscription_index: 0,
+            active_feed_index: 0
         }
     }
 
@@ -62,10 +68,16 @@ impl<'a> MainDisplayControllers<'a> {
         self.window_subscriptions.clear();
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.window_subscriptions.draw(&self.subscriptions.subscriptions);
+                self.window_subscriptions.draw(
+                    self.active_subscription_index,
+                    &self.subscriptions.subscriptions
+                );
             },
             "feeds" => {
-                self.window_feeds.draw(&self.feeds.feeds);
+                self.window_feeds.draw(
+                    self.active_feed_index,
+                    &self.feeds.feeds
+                );
             },
             "read" => {
                 self.window_feed.draw(self.feed.as_ref())
@@ -79,31 +91,62 @@ impl<'a> MainDisplayControllers<'a> {
         self.window_feeds.clear();
         self.window_feed.clear();
     }
+
+    fn set_next_active_sub_index(&mut self) {
+        if !self.subscriptions.subscriptions.is_empty() {
+            if self.active_subscription_index + 1 < self.subscriptions.subscriptions.len() as i32 {
+                self.active_subscription_index += 1;
+                self.draw();
+            }
+        }
+    }
+
+    fn set_previous_active_sub_index(&mut self) {
+        if !self.subscriptions.subscriptions.is_empty() {
+            if self.active_subscription_index - 1 >= 0 {
+                self.active_subscription_index -= 1;
+                self.draw();
+            }
+        }
+    }
+
+    fn set_next_active_feed_index(&mut self) {
+        if !self.feeds.feeds.is_empty() {
+            if self.active_feed_index + 1 < self.feeds.feeds.len() as i32 {
+                self.active_feed_index += 1;
+                self.draw();
+            }
+        }
+    }
+
+    fn set_previous_active_feed_index(&mut self) {
+        if !self.feeds.feeds.is_empty() {
+            if self.active_feed_index - 1 >= 0 {
+                self.active_feed_index -= 1;
+                self.draw();
+            }
+        }
+    }
 }
 
 impl<'a> Controller for MainDisplayControllers<'a> {
     fn on_init(&mut self) {
-        self.window_subscriptions.draw(&self.subscriptions.subscriptions);
+        self.window_subscriptions.draw(
+            self.active_subscription_index,
+            &self.subscriptions.subscriptions
+        );
     }
 
     fn on_key_down(&mut self) {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
-                if !self.subscriptions.subscriptions.is_empty() {
-                    if self.window_subscriptions.active_item + 1 < self.subscriptions.subscriptions.len() as i32 {
-                        self.window_subscriptions.active_item += 1;
-                        self.draw();
-                    }
-                }
+                self.set_next_active_sub_index();
+                //self.draw();
             },
             "feeds" => {
-                if !self.feeds.feeds.is_empty() {
-                    if self.window_feeds.active_item + 1 < self.feeds.feeds.len() as i32 {
-                        self.window_feeds.active_item += 1;
-                        self.draw();
-                    }
-                }
+                self.set_next_active_feed_index();
+                //self.draw();
             },
             "read" => {
                 // TODO scroll down
@@ -116,20 +159,12 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
-                if !self.subscriptions.subscriptions.is_empty() {
-                    if self.window_subscriptions.active_item - 1 >= 0 {
-                        self.window_subscriptions.active_item -= 1;
-                        self.draw();
-                    }
-                }
+                self.set_previous_active_sub_index();
+                //self.draw();
             },
             "feeds" => {
-                if !self.feeds.feeds.is_empty() {
-                    if self.window_feeds.active_item - 1 >= 0 {
-                        self.window_feeds.active_item -= 1;
-                        self.draw();
-                    }
-                }
+                self.set_previous_active_feed_index();
+                //self.draw();
             },
             "read" => {
                 // TODO scroll up
@@ -143,13 +178,13 @@ impl<'a> Controller for MainDisplayControllers<'a> {
             "subscriptions" => {
                 /* Clear feeds */
                 self.feeds.clear();
-                /* Load feeds */
-                let mut statement = self.db_connection.prepare("SELECT content FROM feed").unwrap();
-                let rows = statement.query_map(&[], |row| -> String {row.get(0)}).unwrap();
-                for row in rows {
-                    let feed_name = row.unwrap();
-                    self.feeds.add_feed(feed_name);
-                }
+                /* Get active subscription id */
+                // TODO improve here
+                let id_sub = self.subscriptions.subscriptions.get(self.active_subscription_index as usize).unwrap().id;
+                self.feeds = get_feeds_from_subscription(
+                    self.db_connection,
+                    id_sub
+                );
                 self.current_window = String::from("feeds");
                 self.draw();
             },
