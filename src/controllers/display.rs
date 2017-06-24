@@ -1,5 +1,9 @@
 extern crate ncurses;
+extern crate rusqlite;
 
+use self::rusqlite::Connection;
+
+use super::super::database::get_subscriptions;
 use super::Controller;
 use super::super::windows::list::WindowList;
 use super::super::windows::text::WindowText;
@@ -13,7 +17,7 @@ use super::super::models::feeds::{
 };
 use super::super::settings::Settings;
 
-pub struct MainDisplayControllers {
+pub struct MainDisplayControllers<'a> {
     window_subscriptions: WindowList,
     window_feeds: WindowList,
     window_feed: WindowText,
@@ -28,25 +32,29 @@ pub struct MainDisplayControllers {
      *  - read
      */
     // TODO find a better way
-    current_window: String
+    current_window: String,
+    db_connection: &'a Connection
 }
 
-impl MainDisplayControllers {
-    pub fn new(settings: &Settings) -> MainDisplayControllers {
-        let mut feeds = ListFeeds::new();
-        feeds.add_feed(String::from("test"));
-        feeds.add_feed(String::from("salut"));
-        /* Copy subscriptions from settings */
-        let mut subscriptions = settings.subscriptions.to_owned();
+impl<'a> MainDisplayControllers<'a> {
+    pub fn new(settings: &Settings, db_connection: &'a Connection) -> MainDisplayControllers<'a> {
+        /* Copy subscriptions from settings
+         * TODO get subscriptions from database
+         */
+        //let mut subscriptions = settings.subscriptions.to_owned();
+
+        let mut subscriptions = get_subscriptions(db_connection);
 
         MainDisplayControllers {
             window_subscriptions: WindowList::new(),
             window_feeds: WindowList::new(),
             window_feed: WindowText::new(),
             subscriptions: subscriptions,
-            feeds: feeds,
+            feeds: ListFeeds::new(),
             feed: String::from("--"), // Empty content
-            current_window: String::from("subscriptions")
+            current_window: String::from("subscriptions"),
+            db_connection: db_connection
+
         }
     }
 
@@ -73,7 +81,7 @@ impl MainDisplayControllers {
     }
 }
 
-impl Controller for MainDisplayControllers {
+impl<'a> Controller for MainDisplayControllers<'a> {
     fn on_init(&mut self) {
         self.window_subscriptions.draw(&self.subscriptions.subscriptions);
     }
@@ -133,6 +141,15 @@ impl Controller for MainDisplayControllers {
     fn on_key_enter(&mut self) {
         match self.current_window.as_ref() {
             "subscriptions" => {
+                /* Clear feeds */
+                self.feeds.clear();
+                /* Load feeds */
+                let mut statement = self.db_connection.prepare("SELECT content FROM feed").unwrap();
+                let rows = statement.query_map(&[], |row| -> String {row.get(0)}).unwrap();
+                for row in rows {
+                    let feed_name = row.unwrap();
+                    self.feeds.add_feed(feed_name);
+                }
                 self.current_window = String::from("feeds");
                 self.draw();
             },

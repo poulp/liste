@@ -9,6 +9,7 @@ use std::fs::File;
 use std::path::Path;
 use clap::ArgMatches;
 
+use models::subscriptions::Subscription;
 use models::subscriptions::ListSubscriptions;
 
 const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
@@ -36,8 +37,11 @@ impl Settings {
                     let url = line.unwrap();
                     /* Add subscription to the model */
                     subscriptions.add_subscription(
-                        url.to_string(),
-                        url.to_string()
+                        Subscription {
+                            id: 0,
+                            name: url.to_string(),
+                            url: url.to_string()
+                        }
                     );
                 }
                 /* Return settings */

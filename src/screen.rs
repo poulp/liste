@@ -1,20 +1,25 @@
 extern crate ncurses;
+extern crate rusqlite;
+
+use self::rusqlite::Connection;
 
 use controllers::Controller;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
 use settings::Settings;
 
-pub struct Screen{
-    main_display: MainDisplayControllers,
-    status_bar: ControllerStatusBar
+pub struct Screen<'a> {
+    main_display: MainDisplayControllers<'a>,
+    status_bar: ControllerStatusBar,
+    db_connection: &'a Connection
 }
 
-impl Screen {
-    pub fn new(settings: &Settings) -> Screen {
+impl<'a> Screen<'a> {
+    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Screen<'a> {
         Screen {
-            main_display: MainDisplayControllers::new(&settings),
-            status_bar: ControllerStatusBar::new(&settings)
+            main_display: MainDisplayControllers::new(&settings, &db_connection),
+            status_bar: ControllerStatusBar::new(&settings),
+            db_connection: db_connection
         }
     }
 

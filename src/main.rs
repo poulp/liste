@@ -12,7 +12,7 @@ use std::thread;
 
 use clap::App;
 use clap::Arg;
-use  rusqlite::Connection;
+use rusqlite::Connection;
 
 const VERSION: &str = "0.0.1";
 //const COLOR_BACKGROUND: i16 = 16;
@@ -52,6 +52,10 @@ fn init_database(connection: &Connection, settings: &Settings) {
 
         }
     }
+
+    connection.execute("
+            INSERT INTO feed (content, subscription_id) VALUES (?1, ?2)",
+                           &[&"lolmdr", &1]).unwrap();
 }
 
 fn main() {
@@ -96,20 +100,23 @@ fn main() {
     //ncurses::init_color(COLOR_BACKGROUND, 0, 43 * 4, 54 * 4);
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
 
-    let mut screen = Screen::new(&settings);
-    ncurses::refresh();
-    screen.on_init();
-    /* Event loop */
-    loop {
-        //let start = Instant::now();
-        /* getch is async */
-        let ch = ncurses::getch();
-        if screen.get_input(ch, &settings) {
-            break;
+    {
+        let mut screen = Screen::new(&settings, &db_connection);
+
+        ncurses::refresh();
+        screen.on_init();
+        /* Event loop */
+        loop {
+            //let start = Instant::now();
+            /* getch is async */
+            let ch = ncurses::getch();
+            if screen.get_input(ch, &settings) {
+                break;
+            }
+            //let end = Instant::now();
+            //let sleep_time = start.elapsed().as_secs() + MS_PER_FRAME - end.elapsed().as_secs();
+            thread::sleep(Duration::from_millis(MS_PER_FRAME));
         }
-        //let end = Instant::now();
-        //let sleep_time = start.elapsed().as_secs() + MS_PER_FRAME - end.elapsed().as_secs();
-        thread::sleep(Duration::from_millis(MS_PER_FRAME));
     }
 
     //Stop ncurses

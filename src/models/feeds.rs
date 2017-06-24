@@ -33,4 +33,8 @@ impl ListFeeds {
         let feed = Feed::new(name);
         self.feeds.push(feed);
     }
+
+    pub fn clear(&mut self) {
+        self.feeds.clear();
+    }
 }
