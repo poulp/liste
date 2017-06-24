@@ -16,7 +16,7 @@ const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
 
 pub struct Settings {
     pub settings_file: String,
-    pub subscriptions: ListSubscriptions
+    pub subscriptions: Vec<String>
 }
 
 impl Settings {
@@ -25,7 +25,7 @@ impl Settings {
         let settings_file = matches.value_of("settings")
             .unwrap_or(SETTINGS_FILE);
         /* Load here the liste of subscriptions */
-        let mut subscriptions = ListSubscriptions::new();
+        let mut subscriptions = vec![];
         /* Urls file */
         let path = Path::new(settings_file);
         /* Open urls file */
@@ -36,13 +36,7 @@ impl Settings {
                 for line in buffer.lines() {
                     let url = line.unwrap();
                     /* Add subscription to the model */
-                    subscriptions.add_subscription(
-                        Subscription {
-                            id: 0,
-                            name: url.to_string(),
-                            url: url.to_string()
-                        }
-                    );
+                    subscriptions.push(url.to_string());
                 }
                 /* Return settings */
                 Ok(Settings {

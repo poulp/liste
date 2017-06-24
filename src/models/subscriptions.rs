@@ -40,8 +40,4 @@ impl ListSubscriptions {
     pub fn add_subscription(&mut self, subscription: Subscription) {
         self.subscriptions.push(subscription);
     }
-
-    pub fn has_subscription(&self, sub_name: &str) -> bool {
-        self.subscriptions.iter().any(|x| x.url == sub_name)
-    }
 }

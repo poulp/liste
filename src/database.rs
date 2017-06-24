@@ -27,10 +27,10 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
     )", &[]).unwrap();
 
     /* Register new subscriptions */
-    for subscription in &settings.subscriptions.subscriptions {
+    for subscription in &settings.subscriptions {
         connection.execute("
             INSERT INTO subscription (url, name) VALUES (?1, ?2)",
-                           &[&subscription.url, &subscription.name]).unwrap();
+                           &[subscription, subscription]).unwrap();
     }
 
     /* Purge old subscriptions */
@@ -38,9 +38,8 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
     let rows = stmt.query_map(&[], |row| -> String {row.get(0)}).unwrap();
     for row in rows {
         let url = row.unwrap();
-        if !settings.subscriptions.has_subscription(&url) {
+        if !settings.subscriptions.iter().any(|x| x == &url) {
             connection.execute("DELETE FROM subscription WHERE url = ?", &[&url]).unwrap();
-
         }
     }
 
