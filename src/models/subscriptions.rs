@@ -5,23 +5,29 @@ use std::clone::Clone;
 pub struct Subscription {
     pub id: i32,
     pub name: String,
-    pub url: String
+    pub url: String,
+
+    pub title: Option<String>
 }
 
 impl Subscription {
 
-    pub fn new(id: i32, name: String, url: String) -> Subscription {
+    pub fn new(id: i32, name: String, url: String, title: Option<String>) -> Subscription {
         Subscription {
             id: id,
             name: name,
-            url: url
+            url: url,
+            title: title
         }
     }
 }
 
 impl TraitListViewItem for Subscription {
     fn get_name(&self) -> &str {
-        self.name.as_ref()
+        match self.title.as_ref() {
+            Some(title) => title,
+            None => self.name.as_ref()
+        }
     }
 }
 

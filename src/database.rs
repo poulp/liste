@@ -14,7 +14,8 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         CREATE TABLE IF NOT EXISTS subscription (
         subscription_id INTEGER PRIMARY KEY,
         url             TEXT UNIQUE ON CONFLICT IGNORE,
-        name            TEXT
+        name            TEXT,
+        title           TEXT
     )", &[]).unwrap();
 
     connection.execute("
@@ -42,22 +43,19 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
             connection.execute("DELETE FROM subscription WHERE url = ?", &[&url]).unwrap();
         }
     }
-
-    connection.execute("
-            INSERT INTO feed (title, description, subscription_id) VALUES (?1, ?2, ?3)",
-                           &[&"lol_title", &"lol_description", &1]).unwrap();
 }
 
 pub fn get_subscriptions(db_connection: &Connection) -> ListSubscriptions {
     let mut subscriptions = ListSubscriptions::new();
 
     let mut statement = db_connection.prepare("
-        SELECT subscription_id, name, url FROM subscription").unwrap();
+        SELECT subscription_id, name, url, title FROM subscription").unwrap();
     let results = statement.query_map(&[], |row| {
         Subscription {
             id: row.get(0),
             name: row.get(1),
-            url: row.get(2)
+            url: row.get(2),
+            title: row.get(3)
         }
     }).unwrap();
     for subscription in results {

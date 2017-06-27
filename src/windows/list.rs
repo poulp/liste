@@ -21,9 +21,9 @@ impl WindowList {
         let window = ncurses::newwin(row_height, row_width, starty, startx);
         if active_item {
             ncurses::wbkgd(window, ncurses::COLOR_PAIR(1));
-            ncurses::mvwprintw(window, 0, 0, item.get_name());
+            ncurses::mvwprintw(window, 0, 0, item.get_name().as_ref());
         } else {
-            ncurses::mvwprintw(window, 0, 0, item.get_name());
+            ncurses::mvwprintw(window, 0, 0, item.get_name().as_ref());
         }
         ncurses::wrefresh(window);
     }

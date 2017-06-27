@@ -123,6 +123,13 @@ impl<'a> MainDisplayControllers<'a> {
             }
         }
     }
+
+    pub fn after_synchronize(&mut self) {
+        // Fetch subscriptions
+        let mut subscriptions = get_subscriptions(self.db_connection);
+        self.subscriptions = subscriptions;
+        self.draw();
+    }
 }
 
 impl<'a> Controller for MainDisplayControllers<'a> {
@@ -180,16 +187,20 @@ impl<'a> Controller for MainDisplayControllers<'a> {
                     .get(self.active_subscription_index as usize)
                     .unwrap()
                     .id;
+                /* Fetch feeds from db */
                 self.feeds = get_feeds_from_subscription(
                     self.db_connection,
                     id_sub
                 );
+                /* Load the feeds screen */
                 self.current_window = String::from("feeds");
                 self.draw();
             },
             "feeds" => {
-                self.current_window = String::from("read");
-                self.draw();
+                if !self.feeds.feeds.is_empty() {
+                    self.current_window = String::from("read");
+                    self.draw();
+                }
             },
             "read" => {
                 // nothing happen here

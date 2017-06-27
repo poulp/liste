@@ -1,12 +1,15 @@
 extern crate ncurses;
 extern crate rusqlite;
+extern crate rss;
 
 use self::rusqlite::Connection;
+use self::rss::Channel;
 
 use controllers::Controller;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
 use settings::Settings;
+use database::get_subscriptions;
 
 pub struct Screen<'a> {
     main_display: MainDisplayControllers<'a>,
@@ -76,7 +79,25 @@ impl<'a> Screen<'a> {
         self.status_bar.on_key_previous();
     }
 
-    fn synchronize(&self) {
-
+    fn synchronize(&mut self) {
+        /* Get back if of channel */
+        self.status_bar.draw_text(String::from("sync !"));
+        let subscriptions = get_subscriptions(self.db_connection);
+        for subscription in &subscriptions.subscriptions {
+            let channel_opt = Channel::from_url(subscription.url.as_ref());
+            match channel_opt {
+                Ok(channel) => {
+                    self.db_connection.execute(
+                        "UPDATE subscription SET title = ? WHERE subscription_id = ?",
+                        &[&channel.title(), &subscription.id]
+                    );
+                    self.status_bar.draw_text(String::from("ok !"));
+                },
+                Err(error) => {
+                    self.status_bar.draw_text(String::from("error !"));
+                }
+            }
+        }
+        self.main_display.after_synchronize();
     }
 }
