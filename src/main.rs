@@ -6,6 +6,7 @@ extern crate rusqlite;
 use std::process;
 use std::time::{Duration, Instant};
 use std::thread;
+
 use clap::App;
 use clap::Arg;
 use rusqlite::Connection;
@@ -15,7 +16,6 @@ use liste::screen::Screen;
 use liste::database::init_database;
 
 const VERSION: &str = "0.0.1";
-//const COLOR_BACKGROUND: i16 = 16;
 const MS_PER_FRAME: u64 = 40;
 
 fn main() {
@@ -32,12 +32,13 @@ fn main() {
 
     /* Get settings */
     let settings = Settings::new(matches).unwrap_or_else(|err| {
-        println!("Problem with settings: {}", err);
+        println!("Error settings: {}", err);
         process::exit(1);
     });
 
     /* Open database */
     let db_connection = Connection::open("base.db").unwrap();
+    /* Create tables */
     init_database(&db_connection, &settings);
 
     // Start ncurses
@@ -55,11 +56,8 @@ fn main() {
     ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE); // Hide cursor
     ncurses::timeout(0); // non blocking io
 
-    /* Colors */
     ncurses::start_color(); // Enable colors
-    //ncurses::init_color(COLOR_BACKGROUND, 0, 43 * 4, 54 * 4);
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
-
     {
         let mut screen = Screen::new(&settings, &db_connection);
 
@@ -67,19 +65,16 @@ fn main() {
         screen.on_init();
         /* Event loop */
         loop {
-            //let start = Instant::now();
-            /* getch is async */
+            /* Get user input (async) */
             let ch = ncurses::getch();
             if screen.get_input(ch, &settings) {
                 break;
             }
-            //let end = Instant::now();
-            //let sleep_time = start.elapsed().as_secs() + MS_PER_FRAME - end.elapsed().as_secs();
             thread::sleep(Duration::from_millis(MS_PER_FRAME));
         }
     }
-
-    //Stop ncurses
+    // Stop ncurses
     ncurses::endwin();
+    // Close database connection
     db_connection.close().unwrap();
 }

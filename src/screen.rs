@@ -2,14 +2,14 @@ extern crate ncurses;
 extern crate rusqlite;
 extern crate rss;
 
-use self::rusqlite::Connection;
 use self::rss::Channel;
+use self::rusqlite::Connection;
 
 use controllers::Controller;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
-use settings::Settings;
 use database::get_subscriptions;
+use settings::Settings;
 
 pub struct Screen<'a> {
     main_display: MainDisplayControllers<'a>,
@@ -27,7 +27,7 @@ impl<'a> Screen<'a> {
     }
 
     pub fn get_input(&mut self, ch: i32, settings: &Settings) -> bool {
-        /* return true to quit */
+        /* Return true to quit the application */
         match ch {
             ncurses::KEY_DOWN => {
                 self.on_key_down();
@@ -43,12 +43,13 @@ impl<'a> Screen<'a> {
                 self.on_key_previous();
             },
             115 => {
-                // 's' Sync
+                // 's'
                 self.synchronize();
             },
             113 => {
+                // 'q'
                 return true;
-            }, // 'q' -> quit
+            },
             _ => {} // do nothing
         }
         return false;
@@ -80,6 +81,7 @@ impl<'a> Screen<'a> {
     }
 
     fn synchronize(&mut self) {
+        // TODO non blocking ui
         self.status_bar.draw_text(String::from("sync !"));
         let subscriptions = get_subscriptions(self.db_connection);
         for subscription in &subscriptions.subscriptions {

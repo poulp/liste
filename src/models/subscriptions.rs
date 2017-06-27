@@ -6,7 +6,6 @@ pub struct Subscription {
     pub id: i32,
     pub name: String,
     pub url: String,
-
     pub title: Option<String>
 }
 

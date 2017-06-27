@@ -7,11 +7,13 @@ use std::io::BufRead;
 use std::io::Error;
 use std::fs::File;
 use std::path::Path;
+
 use clap::ArgMatches;
 
 use models::subscriptions::Subscription;
 use models::subscriptions::ListSubscriptions;
 
+/* Default settings file location */
 const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
 
 pub struct Settings {
@@ -24,13 +26,12 @@ impl Settings {
         /* Settings file path */
         let settings_file = matches.value_of("settings")
             .unwrap_or(SETTINGS_FILE);
-        /* Load here the liste of subscriptions */
-        let mut subscriptions = vec![];
-        /* Urls file */
         let path = Path::new(settings_file);
-        /* Open urls file */
+        let mut subscriptions = vec![];
+        /* Open settings file and extract everything */
         match File::open(&path) {
             Ok(file) => {
+                /* Load here the list of subscriptions */
                 let buffer = BufReader::new(file);
                 /* Extract feeds urls */
                 for line in buffer.lines() {

@@ -39,6 +39,5 @@ impl Controller for ControllerStatusBar {
 impl ControllerStatusBar {
     pub fn draw_text(&mut self, text: String) {
         self.window.draw(text);
-
     }
 }

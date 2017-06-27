@@ -3,13 +3,11 @@ extern crate rusqlite;
 use self::rusqlite::Connection;
 
 use settings::Settings;
-use models::subscriptions::Subscription;
-use models::subscriptions::ListSubscriptions;
-use models::feeds::Feed;
-use models::feeds::ListFeeds;
+use models::subscriptions::{Subscription, ListSubscriptions};
+use models::feeds::{Feed, ListFeeds};
 
 pub fn init_database(connection: &Connection, settings: &Settings) {
-    /* Tables */
+    /* Subscription table */
     connection.execute("
         CREATE TABLE IF NOT EXISTS subscription (
         subscription_id INTEGER PRIMARY KEY,
@@ -18,6 +16,7 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         title           TEXT
     )", &[]).unwrap();
 
+    /* Feed table */
     connection.execute("
         CREATE TABLE IF NOT EXISTS feed (
         feed_id         INTEGER PRIMARY KEY,
@@ -74,7 +73,6 @@ pub fn get_feeds_from_subscription(db_connection: &Connection, subscription_id: 
             description: row.get(1)
         }
     }).unwrap();
-    // TODO map
     for row in rows {
         feeds.add_feed(row.unwrap());
     }
