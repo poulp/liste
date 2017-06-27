@@ -80,10 +80,10 @@ impl<'a> Screen<'a> {
     }
 
     fn synchronize(&mut self) {
-        /* Get back if of channel */
         self.status_bar.draw_text(String::from("sync !"));
         let subscriptions = get_subscriptions(self.db_connection);
         for subscription in &subscriptions.subscriptions {
+            // Download feeds
             let channel_opt = Channel::from_url(subscription.url.as_ref());
             match channel_opt {
                 Ok(channel) => {
@@ -91,6 +91,14 @@ impl<'a> Screen<'a> {
                         "UPDATE subscription SET title = ? WHERE subscription_id = ?",
                         &[&channel.title(), &subscription.id]
                     );
+                    /* Fetch feeds */
+                    for item in channel.items() {
+                        /* Save feed in db */
+                        self.db_connection.execute(
+                            "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
+                            &[&item.title(), &item.description(), &subscription.id]
+                        ).unwrap();
+                    }
                     self.status_bar.draw_text(String::from("ok !"));
                 },
                 Err(error) => {

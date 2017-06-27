@@ -192,6 +192,8 @@ impl<'a> Controller for MainDisplayControllers<'a> {
                     self.db_connection,
                     id_sub
                 );
+                /* Init active item index */
+                self.active_feed_index = 0;
                 /* Load the feeds screen */
                 self.current_window = String::from("feeds");
                 self.draw();
