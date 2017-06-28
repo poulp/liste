@@ -2,6 +2,9 @@ extern crate ncurses;
 extern crate rusqlite;
 extern crate rss;
 
+use std::thread;
+use std::time::Duration;
+use std::sync::mpsc::Sender;
 use self::rss::Channel;
 use self::rusqlite::Connection;
 
@@ -14,15 +17,17 @@ use settings::Settings;
 pub struct Screen<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
-    db_connection: &'a Connection
+    db_connection: &'a Connection,
+    tx: Sender<String>
 }
 
 impl<'a> Screen<'a> {
-    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Screen<'a> {
+    pub fn new(settings: &Settings, db_connection: &'a Connection, tx: Sender<String>) -> Screen<'a> {
         Screen {
             main_display: MainDisplayControllers::new(&settings, &db_connection),
             status_bar: ControllerStatusBar::new(&settings),
-            db_connection: db_connection
+            db_connection: db_connection,
+            tx: tx
         }
     }
 
@@ -81,33 +86,40 @@ impl<'a> Screen<'a> {
     }
 
     fn synchronize(&mut self) {
-        // TODO non blocking ui
-        self.status_bar.draw_text(String::from("sync !"));
-        let subscriptions = get_subscriptions(self.db_connection);
-        for subscription in &subscriptions.subscriptions {
-            // Download feeds
-            let channel_opt = Channel::from_url(subscription.url.as_ref());
-            match channel_opt {
-                Ok(channel) => {
-                    self.db_connection.execute(
-                        "UPDATE subscription SET title = ? WHERE subscription_id = ?",
-                        &[&channel.title(), &subscription.id]
-                    );
-                    /* Fetch feeds */
-                    for item in channel.items() {
-                        /* Save feed in db */
-                        self.db_connection.execute(
-                            "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
-                            &[&item.title(), &item.description(), &subscription.id]
-                        ).unwrap();
+        let tx_sync = self.tx.clone();
+        thread::spawn(move || {
+            let db_conn = Connection::open("base.db").unwrap();
+            //self.status_bar.draw_text(String::from("sync !"));
+            let subscriptions = get_subscriptions(&db_conn);
+            for subscription in &subscriptions.subscriptions {
+                // Download feeds
+                let channel_opt = Channel::from_url(subscription.url.as_ref());
+                match channel_opt {
+                    Ok(channel) => {
+                        db_conn.execute(
+                            "UPDATE subscription SET title = ? WHERE subscription_id = ?",
+                            &[&channel.title(), &subscription.id]
+                        );
+                        /* Fetch feeds */
+                        for item in channel.items() {
+                            /* Save feed in db */
+                            db_conn.execute(
+                                "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
+                                &[&item.title(), &item.description(), &subscription.id]
+                            ).unwrap();
+                        }
+                        //self.status_bar.draw_text(String::from("ok !"));
+                    },
+                    Err(error) => {
+                        //self.status_bar.draw_text(String::from("error !"));
                     }
-                    self.status_bar.draw_text(String::from("ok !"));
-                },
-                Err(error) => {
-                    self.status_bar.draw_text(String::from("error !"));
                 }
             }
-        }
-        self.main_display.after_synchronize();
+            //self.main_display.after_synchronize();
+            let final_event = String::from("thread done !");
+            tx_sync.send(final_event).unwrap();
+            let final_event_t = String::from("thread mdr !");
+            tx_sync.send(final_event_t).unwrap();
+        });
     }
 }
