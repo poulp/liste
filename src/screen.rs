@@ -56,7 +56,7 @@ impl<'a> Screen<'a> {
                 Ok(event) => {
                     self.status_bar.draw_text(event);
                 },
-                Err(error) => {}
+                Err(_) => {}
             }
             thread::sleep(Duration::from_millis(MS_PER_FRAME));
         }
@@ -120,7 +120,6 @@ impl<'a> Screen<'a> {
         let tx_sync = self.tx.clone();
         thread::spawn(move || {
             let db_conn = Connection::open("base.db").unwrap();
-            //self.status_bar.draw_text(String::from("sync !"));
             let subscriptions = get_subscriptions(&db_conn);
             let len_sub = subscriptions.subscriptions.len();
 
