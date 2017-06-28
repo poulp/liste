@@ -4,30 +4,61 @@ extern crate rss;
 
 use std::thread;
 use std::time::Duration;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
 use self::rss::Channel;
 use self::rusqlite::Connection;
 
 use controllers::Controller;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
-use database::get_subscriptions;
+use database::{
+    get_subscriptions,
+    create_feed
+};
 use settings::Settings;
+
+const MS_PER_FRAME: u64 = 40;
 
 pub struct Screen<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
     db_connection: &'a Connection,
-    tx: Sender<String>
+
+    tx: Sender<String>,
+    rx: Receiver<String>
 }
 
 impl<'a> Screen<'a> {
-    pub fn new(settings: &Settings, db_connection: &'a Connection, tx: Sender<String>) -> Screen<'a> {
+    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Screen<'a> {
+        let (tx, rx) = channel();
         Screen {
             main_display: MainDisplayControllers::new(&settings, &db_connection),
             status_bar: ControllerStatusBar::new(&settings),
             db_connection: db_connection,
-            tx: tx
+            tx: tx,
+            rx: rx
+        }
+    }
+
+    pub fn main_loop(&mut self, settings: &Settings) {
+        ncurses::refresh();
+        self.on_init();
+
+        loop {
+            /* Get user input (async) */
+            let ch = ncurses::getch();
+            if self.get_input(ch, settings) {
+                break;
+            }
+            /* Get event */
+            let result: Result<String, TryRecvError> = self.rx.try_recv();
+            match result {
+                Ok(event) => {
+                    self.status_bar.draw_text(event);
+                },
+                Err(error) => {}
+            }
+            thread::sleep(Duration::from_millis(MS_PER_FRAME));
         }
     }
 
@@ -91,7 +122,12 @@ impl<'a> Screen<'a> {
             let db_conn = Connection::open("base.db").unwrap();
             //self.status_bar.draw_text(String::from("sync !"));
             let subscriptions = get_subscriptions(&db_conn);
-            for subscription in &subscriptions.subscriptions {
+            let len_sub = subscriptions.subscriptions.len();
+
+            for (index, subscription) in subscriptions.subscriptions.iter().enumerate() {
+                tx_sync.send(
+                    format!("Download channels : {}/{}", index, len_sub)
+                ).unwrap();
                 // Download feeds
                 let channel_opt = Channel::from_url(subscription.url.as_ref());
                 match channel_opt {
@@ -103,23 +139,25 @@ impl<'a> Screen<'a> {
                         /* Fetch feeds */
                         for item in channel.items() {
                             /* Save feed in db */
-                            db_conn.execute(
-                                "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
-                                &[&item.title(), &item.description(), &subscription.id]
-                            ).unwrap();
+                            create_feed(
+                                &db_conn,
+                                item.title().unwrap(),
+                                item.description().unwrap(),
+                                subscription.id
+                            )
                         }
-                        //self.status_bar.draw_text(String::from("ok !"));
+
                     },
                     Err(error) => {
                         //self.status_bar.draw_text(String::from("error !"));
                     }
                 }
+                tx_sync.send(
+                    format!("Download channels : {len_sub}/{len_sub} Done !", len_sub=len_sub)
+                ).unwrap();
             }
             //self.main_display.after_synchronize();
-            let final_event = String::from("thread done !");
-            tx_sync.send(final_event).unwrap();
-            let final_event_t = String::from("thread mdr !");
-            tx_sync.send(final_event_t).unwrap();
+
         });
     }
 }

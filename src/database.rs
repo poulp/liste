@@ -78,3 +78,11 @@ pub fn get_feeds_from_subscription(db_connection: &Connection, subscription_id: 
     }
     feeds
 }
+
+pub fn create_feed(db_connection: &Connection, title: &str,
+                   description: &str, subscription_id: i32) {
+    db_connection.execute(
+        "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
+        &[&title, &description, &subscription_id]
+    ).unwrap();
+}
