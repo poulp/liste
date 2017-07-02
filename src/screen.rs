@@ -22,7 +22,7 @@ const MS_PER_FRAME: u64 = 40;
 pub struct Screen<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
-    db_connection: &'a Connection,
+    db_connection: &'a Connection, // TODO remove
 
     tx: Sender<String>,
     rx: Receiver<String>
@@ -32,22 +32,22 @@ impl<'a> Screen<'a> {
     pub fn new(settings: &Settings, db_connection: &'a Connection) -> Screen<'a> {
         let (tx, rx) = channel();
         Screen {
-            main_display: MainDisplayControllers::new(&settings, &db_connection),
-            status_bar: ControllerStatusBar::new(&settings),
+            main_display: MainDisplayControllers::new(&db_connection),
+            status_bar: ControllerStatusBar::new(),
             db_connection: db_connection,
             tx: tx,
             rx: rx
         }
     }
 
-    pub fn main_loop(&mut self, settings: &Settings) {
+    pub fn main_loop(&mut self) {
         ncurses::refresh();
         self.on_init();
 
         loop {
             /* Get user input (async) */
             let ch = ncurses::getch();
-            if self.get_input(ch, settings) {
+            if self.get_input(ch) {
                 break;
             }
             /* Get event */
@@ -62,7 +62,7 @@ impl<'a> Screen<'a> {
         }
     }
 
-    pub fn get_input(&mut self, ch: i32, settings: &Settings) -> bool {
+    pub fn get_input(&mut self, ch: i32) -> bool {
         /* Return true to quit the application */
         match ch {
             ncurses::KEY_DOWN => {

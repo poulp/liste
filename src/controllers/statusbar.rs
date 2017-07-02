@@ -2,19 +2,14 @@ extern crate ncurses;
 
 use super::Controller;
 use super::super::windows::statusbar::WindowStatusBar;
-use super::super::settings::Settings;
 
 pub struct ControllerStatusBar {
     window: WindowStatusBar
 }
 
 impl ControllerStatusBar {
-    pub fn new(settings: &Settings) -> ControllerStatusBar {
-        let total_width = ncurses::COLS();
-        let total_height = ncurses::LINES();
-
+    pub fn new() -> ControllerStatusBar {
         let window = WindowStatusBar::new();
-
         ControllerStatusBar {
             window: window,
         }

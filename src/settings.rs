@@ -1,17 +1,12 @@
 extern crate ncurses;
 extern crate clap;
 
-use std::process;
 use std::io::BufReader;
 use std::io::BufRead;
-use std::io::Error;
 use std::fs::File;
 use std::path::Path;
 
 use clap::ArgMatches;
-
-use models::subscriptions::Subscription;
-use models::subscriptions::ListSubscriptions;
 
 /* Default settings file location */
 const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";

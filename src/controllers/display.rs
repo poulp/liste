@@ -1,8 +1,6 @@
 extern crate ncurses;
 extern crate rusqlite;
 
-use std::collections::HashMap;
-
 use self::rusqlite::Connection;
 
 use super::super::database::{
@@ -12,15 +10,8 @@ use super::super::database::{
 use super::Controller;
 use super::super::windows::list::WindowList;
 use super::super::windows::text::WindowText;
-use super::super::models::subscriptions::{
-    Subscription,
-    ListSubscriptions
-};
-use super::super::models::feeds::{
-    Feed,
-    ListFeeds
-};
-use super::super::settings::Settings;
+use super::super::models::subscriptions::ListSubscriptions;
+use super::super::models::feeds::ListFeeds;
 
 pub struct MainDisplayControllers<'a> {
     window_subscriptions: WindowList,
@@ -29,7 +20,6 @@ pub struct MainDisplayControllers<'a> {
 
     subscriptions: ListSubscriptions,
     feeds: ListFeeds,
-    feed: String,
 
     /* possible values :
      *  - subscriptions
@@ -44,9 +34,9 @@ pub struct MainDisplayControllers<'a> {
 }
 
 impl<'a> MainDisplayControllers<'a> {
-    pub fn new(settings: &Settings, db_connection: &'a Connection) -> MainDisplayControllers<'a> {
-        let mut subscriptions = get_subscriptions(db_connection);
-        let mut cols_channel = vec![
+    pub fn new(db_connection: &'a Connection) -> MainDisplayControllers<'a> {
+        let subscriptions = get_subscriptions(db_connection);
+        let cols_channel = vec![
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
         ];
@@ -56,7 +46,6 @@ impl<'a> MainDisplayControllers<'a> {
             window_feed: WindowText::new(),
             subscriptions: subscriptions,
             feeds: ListFeeds::new(),
-            feed: String::from("--"), // Empty content
             current_window: String::from("subscriptions"),
             db_connection: db_connection,
             active_subscription_index: 0,
@@ -65,7 +54,7 @@ impl<'a> MainDisplayControllers<'a> {
     }
 
     fn draw(&mut self) {
-        self.window_subscriptions.clear();
+        self.clear_windows();
         match self.current_window.as_ref() {
             "subscriptions" => {
                 let cols = self.get_subscriptions_cols();
@@ -90,7 +79,7 @@ impl<'a> MainDisplayControllers<'a> {
         }
     }
 
-    fn clear_windows(&mut self, to: String) {
+    fn clear_windows(&mut self) {
         self.window_subscriptions.clear();
         self.window_feeds.clear();
         self.window_feed.clear();

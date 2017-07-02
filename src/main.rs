@@ -59,7 +59,7 @@ fn main() {
             &settings,
             &db_connection,
         );
-        screen.main_loop(&settings)
+        screen.main_loop()
     }
     // Stop ncurses
     ncurses::endwin();

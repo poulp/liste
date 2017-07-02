@@ -1,5 +1,3 @@
-use std::clone::Clone;
-
 pub struct Subscription {
     pub id: i32,
     pub name: String,

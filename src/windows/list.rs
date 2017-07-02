@@ -1,7 +1,5 @@
 extern crate ncurses;
 
-use std::collections::HashMap;
-
 pub struct WindowList {
     /* Col name and width */
     cols: Vec<(String, i32)>
@@ -14,7 +12,7 @@ impl WindowList {
         }
     }
 
-    fn create_title_row(&mut self) {
+    fn create_title_row(& self) {
         if !self.cols.is_empty() {
             let mut final_display = String::from("");
             let total_width = ncurses::COLS() - 1;
@@ -23,12 +21,11 @@ impl WindowList {
             for (index, cols_tuple) in self.cols.iter().enumerate() {
                 let col_name = &cols_tuple.0;
                 let col_width = &cols_tuple.1;
-                let display_col = col_name.clone();
                 let is_last_cols = self.cols.len() -1 == index;
 
                 final_display.push_str(col_name.as_ref());
                 if !is_last_cols && col_name.len() <= *col_width as usize {
-                    for i in col_name.len()..*col_width as usize {
+                    for _ in col_name.len()..*col_width as usize {
                         final_display.push_str(" ");
                     }
                 }
@@ -53,7 +50,7 @@ impl WindowList {
 
                 final_display.push_str(cols[index].as_ref());
                 if !is_last_cols && cols[index].len() <= col_width as usize {
-                    for i in cols[index].len()..col_width as usize {
+                    for _ in cols[index].len()..col_width as usize {
                         final_display.push_str(" ");
                     }
                 }
@@ -70,7 +67,6 @@ impl WindowList {
     fn create_window_row(&self, cols: &Vec<String>,
                          index: i32, active_item: bool) {
         let total_width = ncurses::COLS() - 1;
-        let total_height = ncurses::LINES() - 3;
         let startx = 1;
         let starty = index + 1;
         let row_height = 1;
@@ -85,7 +81,7 @@ impl WindowList {
         ncurses::wrefresh(window);
     }
 
-    pub fn draw(&mut self, active_item_index: i32, list_cols: &Vec<Vec<String>>) {
+    pub fn draw(& self, active_item_index: i32, list_cols: &Vec<Vec<String>>) {
         self.create_title_row();
         for (index, cols) in list_cols.iter().enumerate() {
             self.create_window_row(
@@ -96,7 +92,7 @@ impl WindowList {
         }
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(& self) {
         let window = ncurses::newwin(ncurses::LINES() - 3, ncurses::COLS(), 0, 0);
         ncurses::wclear(window);
         ncurses::wrefresh(window);
