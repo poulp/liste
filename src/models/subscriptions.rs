@@ -1,12 +1,10 @@
-use super::listview::TraitListViewItem;
-
 use std::clone::Clone;
 
 pub struct Subscription {
     pub id: i32,
     pub name: String,
     pub url: String,
-    pub title: Option<String>
+    pub title: Option<String>,
 }
 
 impl Subscription {
@@ -19,10 +17,8 @@ impl Subscription {
             title: title
         }
     }
-}
 
-impl TraitListViewItem for Subscription {
-    fn get_name(&self) -> &str {
+    pub fn title(&self) -> &str {
         match self.title.as_ref() {
             Some(title) => title,
             None => self.name.as_ref()

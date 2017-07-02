@@ -1,6 +1,8 @@
 extern crate ncurses;
 extern crate rusqlite;
 
+use std::collections::HashMap;
+
 use self::rusqlite::Connection;
 
 use super::super::database::{
@@ -44,9 +46,13 @@ pub struct MainDisplayControllers<'a> {
 impl<'a> MainDisplayControllers<'a> {
     pub fn new(settings: &Settings, db_connection: &'a Connection) -> MainDisplayControllers<'a> {
         let mut subscriptions = get_subscriptions(db_connection);
+        let mut cols_channel = vec![
+            (String::from("Unread"), 12),
+            (String::from("Channel"), 16),
+        ];
         MainDisplayControllers {
-            window_subscriptions: WindowList::new(),
-            window_feeds: WindowList::new(),
+            window_subscriptions: WindowList::new(cols_channel),
+            window_feeds: WindowList::new(vec![]),
             window_feed: WindowText::new(),
             subscriptions: subscriptions,
             feeds: ListFeeds::new(),
@@ -62,15 +68,17 @@ impl<'a> MainDisplayControllers<'a> {
         self.window_subscriptions.clear();
         match self.current_window.as_ref() {
             "subscriptions" => {
+                let cols = self.get_subscriptions_cols();
                 self.window_subscriptions.draw(
                     self.active_subscription_index,
-                    &self.subscriptions.subscriptions
+                    &cols
                 );
             },
             "feeds" => {
+                let cols = self.get_feeds_cols();
                 self.window_feeds.draw(
                     self.active_feed_index,
-                    &self.feeds.feeds
+                    &cols
                 );
             },
             "read" => {
@@ -124,20 +132,30 @@ impl<'a> MainDisplayControllers<'a> {
         }
     }
 
-    pub fn after_synchronize(&mut self) {
-        // Fetch subscriptions
-        let mut subscriptions = get_subscriptions(self.db_connection);
-        self.subscriptions = subscriptions;
-        self.draw();
+    fn get_subscriptions_cols(&self) -> Vec<Vec<String>> {
+        let mut list_cols: Vec<Vec<String>> = vec![];
+        for subscription in &self.subscriptions.subscriptions {
+            list_cols.push(vec![
+                String::from("0"), // TODO check db
+                String::from(subscription.title()) // TODO use ref ?
+            ]);
+        }
+        list_cols
+    }
+
+    fn get_feeds_cols(&self) -> Vec<Vec<String>> {
+        let mut list_feeds: Vec<Vec<String>> = vec![];
+        for feed in &self.feeds.feeds {
+            list_feeds.push(vec![String::from(feed.title.as_ref())]);
+        }
+        list_feeds
     }
 }
 
 impl<'a> Controller for MainDisplayControllers<'a> {
+
     fn on_init(&mut self) {
-        self.window_subscriptions.draw(
-            self.active_subscription_index,
-            &self.subscriptions.subscriptions
-        );
+        self.draw();
     }
 
     fn on_key_down(&mut self) {
@@ -145,11 +163,9 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 self.set_next_active_sub_index();
-                //self.draw();
             },
             "feeds" => {
                 self.set_next_active_feed_index();
-                //self.draw();
             },
             "read" => {
                 // TODO scroll down
@@ -163,11 +179,9 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 self.set_previous_active_sub_index();
-                //self.draw();
             },
             "feeds" => {
                 self.set_previous_active_feed_index();
-                //self.draw();
             },
             "read" => {
                 // TODO scroll up

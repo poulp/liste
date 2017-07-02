@@ -155,8 +155,6 @@ impl<'a> Screen<'a> {
                     format!("Download channels : {len_sub}/{len_sub} Done !", len_sub=len_sub)
                 ).unwrap();
             }
-            //self.main_display.after_synchronize();
-
         });
     }
 }

@@ -1,5 +1,3 @@
-use super::listview::TraitListViewItem;
-
 pub struct Feed {
     pub title: String,
     pub description: String
@@ -11,12 +9,6 @@ impl Feed {
             title: title,
             description: description
         }
-    }
-}
-
-impl TraitListViewItem for Feed {
-    fn get_name(&self) -> &str {
-        self.title.as_ref()
     }
 }
 
