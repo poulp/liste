@@ -1,7 +1,4 @@
-extern crate ncurses;
-
-use super::Controller;
-use super::super::windows::statusbar::WindowStatusBar;
+use windows::statusbar::WindowStatusBar;
 
 pub struct ControllerStatusBar {
     window: WindowStatusBar
@@ -14,24 +11,11 @@ impl ControllerStatusBar {
             window: window,
         }
     }
-}
 
-impl Controller for ControllerStatusBar {
-
-    fn on_init(&mut self) {
+    pub fn on_init(&mut self) {
         self.window.draw(String::from("status"));
     }
 
-    fn on_key_down(&mut self){}
-
-    fn on_key_up(&mut self){}
-
-    fn on_key_enter(&mut self){}
-
-    fn on_key_previous(&mut self) {}
-}
-
-impl ControllerStatusBar {
     pub fn draw_text(&mut self, text: String) {
         self.window.draw(text);
     }

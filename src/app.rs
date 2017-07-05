@@ -1,16 +1,15 @@
 extern crate ncurses;
 extern crate rusqlite;
-extern crate rss;
 
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
-use self::rss::Channel;
 use self::rusqlite::Connection;
 
-use controllers::Controller;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
+use controllers::sync::ControllerSync;
+
 use database::{
     get_subscriptions,
     create_feed
@@ -22,6 +21,7 @@ const MS_PER_FRAME: u64 = 40;
 pub struct Application<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
+    ctrl_sync: ControllerSync,
     db_connection: &'a Connection, // TODO remove
 
     tx: Sender<String>,
@@ -34,6 +34,7 @@ impl<'a> Application<'a> {
         Application {
             main_display: MainDisplayControllers::new(&db_connection),
             status_bar: ControllerStatusBar::new(),
+            ctrl_sync: ControllerSync::new(),
             db_connection: db_connection,
             tx: tx,
             rx: rx
@@ -98,63 +99,21 @@ impl<'a> Application<'a> {
 
     fn on_key_down(&mut self) {
         self.main_display.on_key_down();
-        self.status_bar.on_key_down();
     }
 
     fn on_key_up(&mut self) {
         self.main_display.on_key_up();
-        self.status_bar.on_key_up();
     }
 
     fn on_key_enter(&mut self) {
         self.main_display.on_key_enter();
-        self.status_bar.on_key_enter();
     }
 
     fn on_key_previous(&mut self) {
         self.main_display.on_key_previous();
-        self.status_bar.on_key_previous();
     }
 
     fn synchronize(&mut self) {
-        let tx_sync = self.tx.clone();
-        thread::spawn(move || {
-            let db_conn = Connection::open("base.db").unwrap();
-            let subscriptions = get_subscriptions(&db_conn);
-            let len_sub = subscriptions.subscriptions.len();
-
-            for (index, subscription) in subscriptions.subscriptions.iter().enumerate() {
-                tx_sync.send(
-                    format!("Download channels : {}/{}", index, len_sub)
-                ).unwrap();
-                // Download feeds
-                let channel_opt = Channel::from_url(subscription.url.as_ref());
-                match channel_opt {
-                    Ok(channel) => {
-                        db_conn.execute(
-                            "UPDATE subscription SET title = ? WHERE subscription_id = ?",
-                            &[&channel.title(), &subscription.id]
-                        );
-                        /* Fetch feeds */
-                        for item in channel.items() {
-                            /* Save feed in db */
-                            create_feed(
-                                &db_conn,
-                                item.title().unwrap(),
-                                item.description().unwrap(),
-                                subscription.id
-                            )
-                        }
-
-                    },
-                    Err(error) => {
-                        //self.status_bar.draw_text(String::from("error !"));
-                    }
-                }
-                tx_sync.send(
-                    format!("Download channels : {len_sub}/{len_sub} Done !", len_sub=len_sub)
-                ).unwrap();
-            }
-        });
+        self.ctrl_sync.synchronize(self.tx.clone());
     }
 }

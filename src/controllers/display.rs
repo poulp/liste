@@ -7,11 +7,10 @@ use super::super::database::{
     get_subscriptions,
     get_feeds_from_subscription
 };
-use super::Controller;
-use super::super::windows::list::WindowList;
-use super::super::windows::text::WindowText;
-use super::super::models::subscriptions::ListSubscriptions;
-use super::super::models::feeds::ListFeeds;
+use windows::list::WindowList;
+use windows::text::WindowText;
+use models::subscriptions::ListSubscriptions;
+use models::feeds::ListFeeds;
 
 pub struct MainDisplayControllers<'a> {
     window_subscriptions: WindowList,
@@ -139,15 +138,12 @@ impl<'a> MainDisplayControllers<'a> {
         }
         list_feeds
     }
-}
 
-impl<'a> Controller for MainDisplayControllers<'a> {
-
-    fn on_init(&mut self) {
+    pub fn on_init(&mut self) {
         self.draw();
     }
 
-    fn on_key_down(&mut self) {
+    pub fn on_key_down(&mut self) {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
@@ -163,7 +159,7 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         }
     }
 
-    fn on_key_up(&mut self) {
+    pub fn on_key_up(&mut self) {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
@@ -179,7 +175,7 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         }
     }
 
-    fn on_key_enter(&mut self) {
+    pub fn on_key_enter(&mut self) {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 /* Clear feeds */
@@ -214,7 +210,7 @@ impl<'a> Controller for MainDisplayControllers<'a> {
         }
     }
 
-    fn on_key_previous(&mut self) {
+    pub fn on_key_previous(&mut self) {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 // nothing here
