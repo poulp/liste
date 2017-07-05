@@ -19,7 +19,7 @@ use settings::Settings;
 
 const MS_PER_FRAME: u64 = 40;
 
-pub struct Screen<'a> {
+pub struct Application<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
     db_connection: &'a Connection, // TODO remove
@@ -28,10 +28,10 @@ pub struct Screen<'a> {
     rx: Receiver<String>
 }
 
-impl<'a> Screen<'a> {
-    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Screen<'a> {
+impl<'a> Application<'a> {
+    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Application<'a> {
         let (tx, rx) = channel();
-        Screen {
+        Application {
             main_display: MainDisplayControllers::new(&db_connection),
             status_bar: ControllerStatusBar::new(),
             db_connection: db_connection,

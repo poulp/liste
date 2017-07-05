@@ -10,7 +10,7 @@ use clap::Arg;
 use rusqlite::Connection;
 
 use liste::settings::Settings;
-use liste::screen::Screen;
+use liste::app::Application;
 use liste::database::init_database;
 
 const VERSION: &str = "0.0.1";
@@ -55,11 +55,11 @@ fn main() {
     ncurses::start_color(); // Enable colors
     ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
     {
-        let mut screen = Screen::new(
+        let mut app = Application::new(
             &settings,
             &db_connection,
         );
-        screen.main_loop()
+        app.main_loop()
     }
     // Stop ncurses
     ncurses::endwin();

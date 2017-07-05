@@ -1,7 +1,5 @@
 extern crate ncurses;
 
-
-
 pub struct WindowList {
     /* Col name and width */
     cols: Vec<(String, i32)>
