@@ -226,4 +226,20 @@ impl<'a> MainDisplayControllers<'a> {
             _ => {}
         }
     }
+
+    pub fn refresh(&mut self) {
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                self.subscriptions = get_subscriptions(self.db_connection);
+                self.draw();
+            },
+            "feeds" => {
+                // pass
+            },
+            "read" => {
+                // pass
+            },
+            _ => {}
+        }
+    }
 }

@@ -4,6 +4,7 @@ extern crate rusqlite;
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
+
 use self::rusqlite::Connection;
 
 use controllers::statusbar::ControllerStatusBar;
@@ -56,6 +57,7 @@ impl<'a> Application<'a> {
             match result {
                 Ok(event) => {
                     self.status_bar.draw_text(event);
+                    self.main_display.refresh();
                 },
                 Err(_) => {}
             }
