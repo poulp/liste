@@ -125,7 +125,7 @@ impl<'a> MainDisplayControllers<'a> {
         let mut list_cols: Vec<Vec<String>> = vec![];
         for subscription in &self.subscriptions.subscriptions {
             list_cols.push(vec![
-                String::from("0"), // TODO check db
+                subscription.total_feed_unread.to_string(), // TODO check db
                 String::from(subscription.title()) // TODO use ref ?
             ]);
         }

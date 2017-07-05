@@ -3,16 +3,20 @@ pub struct Subscription {
     pub name: String,
     pub url: String,
     pub title: Option<String>,
+
+    pub total_feed_unread: i32
 }
 
 impl Subscription {
 
-    pub fn new(id: i32, name: String, url: String, title: Option<String>) -> Subscription {
+    pub fn new(id: i32, name: String, url: String,
+               title: Option<String>, total_feed_unread: i32) -> Subscription {
         Subscription {
             id: id,
             name: name,
             url: url,
-            title: title
+            title: title,
+            total_feed_unread: total_feed_unread
         }
     }
 

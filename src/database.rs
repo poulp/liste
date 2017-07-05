@@ -22,6 +22,7 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         feed_id         INTEGER PRIMARY KEY,
         title           TEXT,
         description     TEXT,
+        is_read         BOOL,
         subscription_id INTEGER,
         FOREIGN KEY(subscription_id) REFERENCES subscription(subscription_id)
     )", &[]).unwrap();
@@ -54,7 +55,8 @@ pub fn get_subscriptions(db_connection: &Connection) -> ListSubscriptions {
             id: row.get(0),
             name: row.get(1),
             url: row.get(2),
-            title: row.get(3)
+            title: row.get(3),
+            total_feed_unread: 12
         }
     }).unwrap();
     for subscription in results {
@@ -66,11 +68,12 @@ pub fn get_subscriptions(db_connection: &Connection) -> ListSubscriptions {
 pub fn get_feeds_from_subscription(db_connection: &Connection, subscription_id: i32) -> ListFeeds {
     let mut feeds = ListFeeds::new();
     let mut statement = db_connection.prepare("
-                    SELECT title, description FROM feed WHERE subscription_id = ?").unwrap();
+                    SELECT title, description, is_read FROM feed WHERE subscription_id = ?").unwrap();
     let rows = statement.query_map(&[&subscription_id], |row| {
         Feed {
             title: row.get(0),
-            description: row.get(1)
+            description: row.get(1),
+            is_read: row.get(2)
         }
     }).unwrap();
     for row in rows {
@@ -82,7 +85,7 @@ pub fn get_feeds_from_subscription(db_connection: &Connection, subscription_id: 
 pub fn create_feed(db_connection: &Connection, title: &str,
                    description: &str, subscription_id: i32) {
     db_connection.execute(
-        "INSERT INTO feed (title, description, subscription_id) VALUES (?, ?, ?)",
-        &[&title, &description, &subscription_id]
+        "INSERT INTO feed (title, description, subscription_id, is_read) VALUES (?, ?, ?, ?)",
+        &[&title, &description, &subscription_id, &false]
     ).unwrap();
 }

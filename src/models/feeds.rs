@@ -1,13 +1,16 @@
 pub struct Feed {
     pub title: String,
-    pub description: String
+    pub description: String,
+
+    pub is_read: bool
 }
 
 impl Feed {
-    pub fn new(title: String, description: String) -> Feed {
+    pub fn new(title: String, description: String, is_read: bool) -> Feed {
         Feed {
             title: title,
-            description: description
+            description: description,
+            is_read: is_read
         }
     }
 }
