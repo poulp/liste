@@ -1,22 +1,24 @@
+extern crate rusqlite;
+
+use self::rusqlite::Connection;
+
+use database::get_total_unread_feed;
+
 pub struct Subscription {
     pub id: i32,
     pub name: String,
     pub url: String,
     pub title: Option<String>,
-
-    pub total_feed_unread: i32
 }
 
 impl Subscription {
 
-    pub fn new(id: i32, name: String, url: String,
-               title: Option<String>, total_feed_unread: i32) -> Subscription {
+    pub fn new(id: i32, name: String, url: String, title: Option<String>) -> Subscription {
         Subscription {
             id: id,
             name: name,
             url: url,
-            title: title,
-            total_feed_unread: total_feed_unread
+            title: title
         }
     }
 
@@ -25,6 +27,10 @@ impl Subscription {
             Some(title) => title,
             None => self.name.as_ref()
         }
+    }
+
+    pub fn get_total_feed_unread(&self, db_connection: &Connection) -> i32 {
+        get_total_unread_feed(db_connection, self.id)
     }
 }
 

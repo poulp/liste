@@ -23,7 +23,6 @@ pub struct Application<'a> {
     main_display: MainDisplayControllers<'a>,
     status_bar: ControllerStatusBar,
     ctrl_sync: ControllerSync,
-    db_connection: &'a Connection, // TODO remove
 
     tx: Sender<String>,
     rx: Receiver<String>
@@ -36,7 +35,6 @@ impl<'a> Application<'a> {
             main_display: MainDisplayControllers::new(&db_connection),
             status_bar: ControllerStatusBar::new(),
             ctrl_sync: ControllerSync::new(),
-            db_connection: db_connection,
             tx: tx,
             rx: rx
         }

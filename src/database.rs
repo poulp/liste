@@ -56,13 +56,22 @@ pub fn get_subscriptions(db_connection: &Connection) -> ListSubscriptions {
             name: row.get(1),
             url: row.get(2),
             title: row.get(3),
-            total_feed_unread: 12
         }
     }).unwrap();
     for subscription in results {
         subscriptions.add_subscription(subscription.unwrap());
     }
     subscriptions
+}
+
+pub fn get_total_unread_feed(db_connection: &Connection, id_subscription: i32) -> i32 {
+    let mut statement = db_connection.prepare("
+        SELECT COUNT(feed_id) FROM feed WHERE feed.is_read = 0 AND feed.subscription_id = ?").unwrap();
+    let mut results = statement.query_map(&[&id_subscription], |row| {
+        row.get(0)
+    }).unwrap();
+    // TODO beurk
+    results.next().unwrap().unwrap()
 }
 
 pub fn get_feeds_from_subscription(db_connection: &Connection, subscription_id: i32) -> ListFeeds {
