@@ -1,24 +1,17 @@
 extern crate ncurses;
-extern crate rusqlite;
-
-use self::rusqlite::Connection;
 
 use super::super::database::{
-    get_subscriptions,
     get_feeds_from_subscription
 };
 use windows::list::WindowList;
 use windows::text::WindowText;
-use models::subscriptions::ListSubscriptions;
-use models::feeds::ListFeeds;
+use app::Cache;
+use controllers::component::Component;
 
-pub struct MainDisplayControllers<'a> {
+pub struct MainDisplayControllers {
     window_subscriptions: WindowList,
     window_feeds: WindowList,
     window_feed: WindowText,
-
-    subscriptions: ListSubscriptions,
-    feeds: ListFeeds,
 
     /* possible values :
      *  - subscriptions
@@ -26,15 +19,14 @@ pub struct MainDisplayControllers<'a> {
      *  - read
      */
     // TODO find a better way
+    // TODO state pattern
     current_window: String,
     active_subscription_index: i32,
     active_feed_index: i32,
-    db_connection: &'a Connection
 }
 
-impl<'a> MainDisplayControllers<'a> {
-    pub fn new(db_connection: &'a Connection) -> MainDisplayControllers<'a> {
-        let subscriptions = get_subscriptions(db_connection);
+impl MainDisplayControllers {
+    pub fn new() -> MainDisplayControllers {
         let cols_channel = vec![
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
@@ -43,27 +35,24 @@ impl<'a> MainDisplayControllers<'a> {
             window_subscriptions: WindowList::new(cols_channel),
             window_feeds: WindowList::new(vec![]),
             window_feed: WindowText::new(),
-            subscriptions: subscriptions,
-            feeds: ListFeeds::new(),
             current_window: String::from("subscriptions"),
-            db_connection: db_connection,
             active_subscription_index: 0,
             active_feed_index: 0
         }
     }
 
-    fn draw(&mut self) {
+    fn draw(&mut self, cache: &Cache) {
         self.clear_windows();
         match self.current_window.as_ref() {
             "subscriptions" => {
-                let cols = self.get_subscriptions_cols();
+                let cols = self.get_subscriptions_cols(cache);
                 self.window_subscriptions.draw(
                     self.active_subscription_index,
                     &cols
                 );
             },
             "feeds" => {
-                let cols = self.get_feeds_cols();
+                let cols = self.get_feeds_cols(cache);
                 self.window_feeds.draw(
                     self.active_feed_index,
                     &cols
@@ -71,7 +60,7 @@ impl<'a> MainDisplayControllers<'a> {
             },
             "read" => {
                 // TODO work with reference
-                let feed = self.feeds.feeds.get(self.active_feed_index as usize).unwrap();
+                let feed = cache.feeds.feeds.get(self.active_feed_index as usize).unwrap();
                 self.window_feed.draw(feed);
             },
             _ => {}
@@ -84,73 +73,76 @@ impl<'a> MainDisplayControllers<'a> {
         self.window_feed.clear();
     }
 
-    fn set_next_active_sub_index(&mut self) {
-        if !self.subscriptions.subscriptions.is_empty() {
-            if self.active_subscription_index + 1 < self.subscriptions.subscriptions.len() as i32 {
+    fn set_next_active_sub_index(&mut self, cache: &Cache) {
+        if !cache.subscriptions.subscriptions.is_empty() {
+            if self.active_subscription_index + 1 < cache.subscriptions.subscriptions.len() as i32 {
                 self.active_subscription_index += 1;
-                self.draw();
+                self.draw(cache);
             }
         }
     }
 
-    fn set_previous_active_sub_index(&mut self) {
-        if !self.subscriptions.subscriptions.is_empty() {
+    fn set_previous_active_sub_index(&mut self, cache: &Cache) {
+        if !cache.subscriptions.subscriptions.is_empty() {
             if self.active_subscription_index - 1 >= 0 {
                 self.active_subscription_index -= 1;
-                self.draw();
+                self.draw(cache);
             }
         }
     }
 
-    fn set_next_active_feed_index(&mut self) {
-        if !self.feeds.feeds.is_empty() {
-            if self.active_feed_index + 1 < self.feeds.feeds.len() as i32 {
+    fn set_next_active_feed_index(&mut self, cache: &Cache) {
+        if !cache.feeds.feeds.is_empty() {
+            if self.active_feed_index + 1 < cache.feeds.feeds.len() as i32 {
                 self.active_feed_index += 1;
-                self.draw();
+                self.draw(cache);
             }
         }
     }
 
-    fn set_previous_active_feed_index(&mut self) {
-        if !self.feeds.feeds.is_empty() {
+    fn set_previous_active_feed_index(&mut self, cache: &Cache) {
+        if !cache.feeds.feeds.is_empty() {
             if self.active_feed_index - 1 >= 0 {
                 self.active_feed_index -= 1;
-                self.draw();
+                self.draw(cache);
             }
         }
     }
 
-    fn get_subscriptions_cols(&self) -> Vec<Vec<String>> {
+    fn get_subscriptions_cols(&self, cache: &Cache) -> Vec<Vec<String>> {
         let mut list_cols: Vec<Vec<String>> = vec![];
-        for subscription in &self.subscriptions.subscriptions {
+        for subscription in &cache.subscriptions.subscriptions {
             list_cols.push(vec![
-                subscription.get_total_feed_unread(self.db_connection).to_string(),
+                subscription.get_total_feed_unread(&cache.db_connection).to_string(),
                 String::from(subscription.title()) // TODO use ref ?
             ]);
         }
         list_cols
     }
 
-    fn get_feeds_cols(&self) -> Vec<Vec<String>> {
+    fn get_feeds_cols(&self, cache: &Cache) -> Vec<Vec<String>> {
         let mut list_feeds: Vec<Vec<String>> = vec![];
-        for feed in &self.feeds.feeds {
+        for feed in &cache.feeds.feeds {
             list_feeds.push(vec![String::from(feed.title.as_ref())]);
         }
         list_feeds
     }
+}
 
-    pub fn on_init(&mut self) {
-        self.draw();
+impl Component for MainDisplayControllers {
+
+    fn on_init(&mut self, cache: &Cache) {
+        self.draw(cache);
     }
 
-    pub fn on_key_down(&mut self) {
+    fn on_key_down(&mut self, cache: &Cache) {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.set_next_active_sub_index();
+                self.set_next_active_sub_index(cache);
             },
             "feeds" => {
-                self.set_next_active_feed_index();
+                self.set_next_active_feed_index(cache);
             },
             "read" => {
                 // TODO scroll down
@@ -159,14 +151,13 @@ impl<'a> MainDisplayControllers<'a> {
         }
     }
 
-    pub fn on_key_up(&mut self) {
-        // TODO move to window ?
+    fn on_key_up(&mut self, cache: &Cache) {
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.set_previous_active_sub_index();
+                self.set_previous_active_sub_index(cache);
             },
             "feeds" => {
-                self.set_previous_active_feed_index();
+                self.set_previous_active_feed_index(cache);
             },
             "read" => {
                 // TODO scroll up
@@ -175,32 +166,32 @@ impl<'a> MainDisplayControllers<'a> {
         }
     }
 
-    pub fn on_key_enter(&mut self) {
+    fn on_key_enter(&mut self, cache: &mut Cache) {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 /* Clear feeds */
-                self.feeds.clear();
+                cache.feeds.clear();
                 /* Get active subscription id */
                 // TODO improve here
-                let id_sub = self.subscriptions.subscriptions
+                let id_sub = cache.subscriptions.subscriptions
                     .get(self.active_subscription_index as usize)
                     .unwrap()
                     .id;
                 /* Fetch feeds from db */
-                self.feeds = get_feeds_from_subscription(
-                    self.db_connection,
+                cache.feeds = get_feeds_from_subscription(
+                    &cache.db_connection,
                     id_sub
                 );
                 /* Init active item index */
                 self.active_feed_index = 0;
                 /* Load the feeds screen */
                 self.current_window = String::from("feeds");
-                self.draw();
+                self.draw(cache);
             },
             "feeds" => {
-                if !self.feeds.feeds.is_empty() {
+                if !cache.feeds.feeds.is_empty() {
                     self.current_window = String::from("read");
-                    self.draw();
+                    self.draw(cache);
                 }
             },
             "read" => {
@@ -210,36 +201,29 @@ impl<'a> MainDisplayControllers<'a> {
         }
     }
 
-    pub fn on_key_previous(&mut self) {
+    fn on_key_previous(&mut self, cache: &Cache) {
         match self.current_window.as_ref() {
             "subscriptions" => {
                 // nothing here
             },
             "feeds" => {
                 self.current_window = String::from("subscriptions");
-                self.draw();
+                self.draw(cache);
             },
             "read" => {
                 self.current_window = String::from("feeds");
-                self.draw();
+                self.draw(cache);
             },
             _ => {}
         }
     }
 
-    pub fn refresh(&mut self) {
-        match self.current_window.as_ref() {
-            "subscriptions" => {
-                self.subscriptions = get_subscriptions(self.db_connection);
-                self.draw();
-            },
-            "feeds" => {
-                // pass
-            },
-            "read" => {
-                // pass
-            },
-            _ => {}
-        }
+    fn on_synchronize_start(&mut self, _cache: &mut Cache) {}
+
+    fn on_synchronize_done(&mut self, cache: &mut Cache) {
+        self.draw(cache);
+    }
+    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {
+        self.draw(cache);
     }
 }

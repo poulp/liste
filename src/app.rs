@@ -10,33 +10,66 @@ use self::rusqlite::Connection;
 use controllers::statusbar::ControllerStatusBar;
 use controllers::display::MainDisplayControllers;
 use controllers::sync::ControllerSync;
-
+use controllers::component::Component;
 use database::{
+    init_database,
     get_subscriptions,
-    create_feed
 };
+use models::subscriptions::ListSubscriptions;
+use models::feeds::ListFeeds;
 use settings::Settings;
 
-const MS_PER_FRAME: u64 = 40;
+const MS_PER_FRAME: u64 = 30;
 
-pub struct Application<'a> {
-    main_display: MainDisplayControllers<'a>,
-    status_bar: ControllerStatusBar,
-    ctrl_sync: ControllerSync,
+pub struct Cache {
+    pub subscriptions: ListSubscriptions,
+    pub feeds: ListFeeds,
+    pub db_connection: Connection,
 
-    tx: Sender<String>,
-    rx: Receiver<String>
+    pub tx: Sender<String>,
+    pub rx: Receiver<String>
 }
 
-impl<'a> Application<'a> {
-    pub fn new(settings: &Settings, db_connection: &'a Connection) -> Application<'a> {
+impl Cache {
+    pub fn new(settings: &Settings) -> Cache {
+        /* Open database */
+        let db_connection = Connection::open("base.db").unwrap();
+        /* Create tables */
+        init_database(&db_connection, &settings);
+        let subscriptions = get_subscriptions(&db_connection);
         let (tx, rx) = channel();
-        Application {
-            main_display: MainDisplayControllers::new(&db_connection),
-            status_bar: ControllerStatusBar::new(),
-            ctrl_sync: ControllerSync::new(),
+        Cache {
+            subscriptions: subscriptions,
+            feeds: ListFeeds::new(),
+            db_connection: db_connection,
             tx: tx,
             rx: rx
+        }
+    }
+}
+
+impl Cache {
+    pub fn refresh(&mut self) {
+        let subscriptions = get_subscriptions(&self.db_connection);
+        self.subscriptions = subscriptions;
+    }
+}
+
+pub struct Application<> {
+    components: Vec<Box<Component>>,
+    cache: Cache,
+}
+
+impl<> Application<> {
+    pub fn new(settings: &Settings) -> Application {
+        let mut components: Vec<Box<Component>> = Vec::new();
+        components.push(Box::new(MainDisplayControllers::new()));
+        components.push(Box::new(ControllerStatusBar::new()));
+        components.push(Box::new(ControllerSync::new()));
+
+        Application {
+            components: components,
+            cache: Cache::new(settings),
         }
     }
 
@@ -51,11 +84,15 @@ impl<'a> Application<'a> {
                 break;
             }
             /* Get event */
-            let result: Result<String, TryRecvError> = self.rx.try_recv();
+            let result: Result<String, TryRecvError> = self.cache.rx.try_recv();
             match result {
                 Ok(event) => {
-                    self.status_bar.draw_text(event);
-                    self.main_display.refresh();
+                    if event.eq("done") {
+                        // TODO find a better way to send event from thread
+                        self.on_synchronize_done();
+                    } else {
+                        self.on_channel_synchronize_start(&event);
+                    }
                 },
                 Err(_) => {}
             }
@@ -81,7 +118,7 @@ impl<'a> Application<'a> {
             },
             115 => {
                 // 's'
-                self.synchronize();
+                self.on_synchronize_start();
             },
             113 => {
                 // 'q'
@@ -92,28 +129,53 @@ impl<'a> Application<'a> {
         return false;
     }
 
-    pub fn on_init(&mut self) {
-        self.main_display.on_init();
-        self.status_bar.on_init();
+    fn on_init(&mut self) {
+        for component in self.components.iter_mut() {
+            component.on_init(&self.cache);
+        }
     }
 
     fn on_key_down(&mut self) {
-        self.main_display.on_key_down();
+        for component in self.components.iter_mut() {
+            component.on_key_down(&self.cache);
+        }
     }
 
     fn on_key_up(&mut self) {
-        self.main_display.on_key_up();
+        for component in self.components.iter_mut() {
+            component.on_key_up(&self.cache);
+        }
     }
 
     fn on_key_enter(&mut self) {
-        self.main_display.on_key_enter();
+        for component in self.components.iter_mut() {
+            component.on_key_enter(&mut self.cache);
+        }
     }
 
     fn on_key_previous(&mut self) {
-        self.main_display.on_key_previous();
+        for component in self.components.iter_mut() {
+            component.on_key_previous(&self.cache);
+        }
     }
 
-    fn synchronize(&mut self) {
-        self.ctrl_sync.synchronize(self.tx.clone());
+    fn on_synchronize_start(&mut self) {
+        for component in self.components.iter_mut() {
+            component.on_synchronize_start(&mut self.cache);
+        }
+    }
+
+    fn on_synchronize_done(&mut self) {
+        /* Reload cache */
+        self.cache.refresh();
+        for component in self.components.iter_mut() {
+            component.on_synchronize_done(&mut self.cache);
+        }
+    }
+
+    fn on_channel_synchronize_start(&mut self, event: &str) {
+        for component in self.components.iter_mut() {
+            component.on_channel_synchronize_start(&mut self.cache, event);
+        }
     }
 }
