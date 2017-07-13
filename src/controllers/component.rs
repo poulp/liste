@@ -9,4 +9,5 @@ pub trait Component {
     fn on_synchronize_start(&mut self, cache: &mut Cache);
     fn on_synchronize_done(&mut self, cache: &mut Cache);
     fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str);
+    fn on_channel_synchronize_done(&mut self, cache: &mut Cache);
 }

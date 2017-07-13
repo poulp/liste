@@ -21,8 +21,6 @@ pub struct MainDisplayControllers {
     // TODO find a better way
     // TODO state pattern
     current_window: String,
-    active_subscription_index: i32,
-    active_feed_index: i32,
 }
 
 impl MainDisplayControllers {
@@ -31,13 +29,14 @@ impl MainDisplayControllers {
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
         ];
+        let cols_feeds = vec![
+            (String::from("Title"), 12)
+        ];
         MainDisplayControllers {
             window_subscriptions: WindowList::new(cols_channel),
-            window_feeds: WindowList::new(vec![]),
+            window_feeds: WindowList::new(cols_feeds),
             window_feed: WindowText::new(),
             current_window: String::from("subscriptions"),
-            active_subscription_index: 0,
-            active_feed_index: 0
         }
     }
 
@@ -45,22 +44,15 @@ impl MainDisplayControllers {
         self.clear_windows();
         match self.current_window.as_ref() {
             "subscriptions" => {
-                let cols = self.get_subscriptions_cols(cache);
-                self.window_subscriptions.draw(
-                    self.active_subscription_index,
-                    &cols
-                );
+                self.window_subscriptions.draw();
             },
             "feeds" => {
-                let cols = self.get_feeds_cols(cache);
-                self.window_feeds.draw(
-                    self.active_feed_index,
-                    &cols
-                );
+                self.window_feeds.draw();
             },
             "read" => {
                 // TODO work with reference
-                let feed = cache.feeds.feeds.get(self.active_feed_index as usize).unwrap();
+                let feed = cache.feeds.feeds.get(
+                    self.window_feeds.get_active_item_index() as usize).unwrap();
                 self.window_feed.draw(feed);
             },
             _ => {}
@@ -68,44 +60,17 @@ impl MainDisplayControllers {
     }
 
     fn clear_windows(&mut self) {
-        self.window_subscriptions.clear();
-        self.window_feeds.clear();
-        self.window_feed.clear();
-    }
-
-    fn set_next_active_sub_index(&mut self, cache: &Cache) {
-        if !cache.subscriptions.subscriptions.is_empty() {
-            if self.active_subscription_index + 1 < cache.subscriptions.subscriptions.len() as i32 {
-                self.active_subscription_index += 1;
-                self.draw(cache);
-            }
-        }
-    }
-
-    fn set_previous_active_sub_index(&mut self, cache: &Cache) {
-        if !cache.subscriptions.subscriptions.is_empty() {
-            if self.active_subscription_index - 1 >= 0 {
-                self.active_subscription_index -= 1;
-                self.draw(cache);
-            }
-        }
-    }
-
-    fn set_next_active_feed_index(&mut self, cache: &Cache) {
-        if !cache.feeds.feeds.is_empty() {
-            if self.active_feed_index + 1 < cache.feeds.feeds.len() as i32 {
-                self.active_feed_index += 1;
-                self.draw(cache);
-            }
-        }
-    }
-
-    fn set_previous_active_feed_index(&mut self, cache: &Cache) {
-        if !cache.feeds.feeds.is_empty() {
-            if self.active_feed_index - 1 >= 0 {
-                self.active_feed_index -= 1;
-                self.draw(cache);
-            }
+        match self.current_window.as_ref() {
+            "subscriptions" => {
+                self.window_subscriptions.clear();
+            },
+            "feeds" => {
+                self.window_feeds.clear();
+            },
+            "read" => {
+                self.window_feed.clear();
+            },
+            _ => {}
         }
     }
 
@@ -132,6 +97,8 @@ impl MainDisplayControllers {
 impl Component for MainDisplayControllers {
 
     fn on_init(&mut self, cache: &Cache) {
+        let mut subscriptions_cols = self.get_subscriptions_cols(cache);
+        self.window_subscriptions.set_cols_data(subscriptions_cols);
         self.draw(cache);
     }
 
@@ -139,10 +106,12 @@ impl Component for MainDisplayControllers {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.set_next_active_sub_index(cache);
+                self.window_subscriptions.clear();
+                self.window_subscriptions.draw_next_item();
             },
             "feeds" => {
-                self.set_next_active_feed_index(cache);
+                self.window_feeds.clear();
+                self.window_feeds.draw_next_item();
             },
             "read" => {
                 // TODO scroll down
@@ -154,10 +123,12 @@ impl Component for MainDisplayControllers {
     fn on_key_up(&mut self, cache: &Cache) {
         match self.current_window.as_ref() {
             "subscriptions" => {
-                self.set_previous_active_sub_index(cache);
+                self.window_subscriptions.clear();
+                self.window_subscriptions.draw_previous_item();
             },
             "feeds" => {
-                self.set_previous_active_feed_index(cache);
+                self.window_feeds.clear();
+                self.window_feeds.draw_previous_item();
             },
             "read" => {
                 // TODO scroll up
@@ -174,7 +145,7 @@ impl Component for MainDisplayControllers {
                 /* Get active subscription id */
                 // TODO improve here
                 let id_sub = cache.subscriptions.subscriptions
-                    .get(self.active_subscription_index as usize)
+                    .get(self.window_subscriptions.get_active_item_index() as usize)
                     .unwrap()
                     .id;
                 /* Fetch feeds from db */
@@ -182,8 +153,8 @@ impl Component for MainDisplayControllers {
                     &cache.db_connection,
                     id_sub
                 );
-                /* Init active item index */
-                self.active_feed_index = 0;
+                let feeds_data = self.get_feeds_cols(cache);
+                self.window_feeds.set_cols_data(feeds_data);
                 /* Load the feeds screen */
                 self.current_window = String::from("feeds");
                 self.draw(cache);
@@ -221,9 +192,16 @@ impl Component for MainDisplayControllers {
     fn on_synchronize_start(&mut self, _cache: &mut Cache) {}
 
     fn on_synchronize_done(&mut self, cache: &mut Cache) {
+        let subscriptions_cols = self.get_subscriptions_cols(cache);
+        self.window_subscriptions.set_cols_data(subscriptions_cols);
         self.draw(cache);
     }
-    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {
+
+    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {}
+
+    fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {
+        let subscriptions_cols = self.get_subscriptions_cols(cache);
+        self.window_subscriptions.set_cols_data(subscriptions_cols);
         self.draw(cache);
     }
 }

@@ -54,6 +54,7 @@ impl Component for ControllerSync {
                             "UPDATE subscription SET title = ? WHERE subscription_id = ?",
                             &[&channel.title(), &subscription.id]
                         ).unwrap();
+
                         /* Fetch feeds */
                         for item in channel.items() {
                             /* Save feed in db */
@@ -61,12 +62,15 @@ impl Component for ControllerSync {
                                 &db_conn,
                                 item.title().unwrap(),
                                 item.description().unwrap(),
-                                subscription.id
-                            )
+                                subscription.id);
                         }
+
                     },
                     Err(_error) => {}
-                }
+                };
+                tx.send(
+                    format!("cdone")
+                ).unwrap();
             }
             tx.send(
                 format!("done")
@@ -78,4 +82,6 @@ impl Component for ControllerSync {
     fn on_synchronize_done(&mut self, _cache: &mut Cache) {}
 
     fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {}
+
+    fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {}
 }

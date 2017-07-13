@@ -4,6 +4,7 @@ extern crate rusqlite;
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
+use std::time::Instant;
 
 use self::rusqlite::Connection;
 
@@ -19,7 +20,7 @@ use models::subscriptions::ListSubscriptions;
 use models::feeds::ListFeeds;
 use settings::Settings;
 
-const MS_PER_FRAME: u64 = 30;
+const MS_PER_FRAME: u64 = 20;
 
 pub struct Cache {
     pub subscriptions: ListSubscriptions,
@@ -78,6 +79,7 @@ impl<> Application<> {
         self.on_init();
 
         loop {
+            let start = Instant::now();
             /* Get user input (async) */
             let ch = ncurses::getch();
             if self.get_input(ch) {
@@ -87,16 +89,23 @@ impl<> Application<> {
             let result: Result<String, TryRecvError> = self.cache.rx.try_recv();
             match result {
                 Ok(event) => {
-                    if event.eq("done") {
-                        // TODO find a better way to send event from thread
-                        self.on_synchronize_done();
-                    } else {
-                        self.on_channel_synchronize_start(&event);
+                    // TODO find a better way to send event from thread
+                    match event.as_ref() {
+                        "cdone" => {
+                            self.on_channel_synchronize_done();
+                        },
+                        "done" => {
+                            self.on_synchronize_done();
+                        },
+                        _ => {
+                            self.on_channel_synchronize_start(&event);
+                        }
                     }
                 },
                 Err(_) => {}
             }
-            thread::sleep(Duration::from_millis(MS_PER_FRAME));
+            let sleep_time = (MS_PER_FRAME / 1000) - start.elapsed().as_secs();
+            thread::sleep(Duration::from_secs(sleep_time));
         }
     }
 
@@ -176,6 +185,12 @@ impl<> Application<> {
     fn on_channel_synchronize_start(&mut self, event: &str) {
         for component in self.components.iter_mut() {
             component.on_channel_synchronize_start(&mut self.cache, event);
+        }
+    }
+
+    fn on_channel_synchronize_done(&mut self) {
+        for component in self.components.iter_mut() {
+            component.on_channel_synchronize_done(&mut self.cache);
         }
     }
 }
