@@ -6,17 +6,19 @@ use database::get_total_unread_item;
 
 pub struct Channel {
     pub id: i32,
-    pub title: Option<String>,
     pub link: String,
+    pub title: Option<String>,
+    pub description: Option<String>
 }
 
 impl Channel {
 
-    pub fn new(id: i32, link: String, title: Option<String>) -> Channel {
+    pub fn new(id: i32, link: String, title: Option<String>, description: Option<String>) -> Channel {
         Channel {
             id: id,
             link: link,
-            title: title
+            title: title,
+            description: description
         }
     }
 

@@ -36,6 +36,7 @@ impl Component for ControllerSync {
     fn on_key_previous(&mut self, _cache: &Cache) {}
 
     fn on_synchronize_start(&mut self, cache: &mut Cache) {
+        /// Fetch channels and save items
         let tx = cache.tx.clone();
         // TODO one thread per channel
         thread::spawn(move || {
@@ -51,8 +52,8 @@ impl Component for ControllerSync {
                 match channel_opt {
                     Ok(channel_fetched) => {
                         db_conn.execute(
-                            "UPDATE channel SET title = ? WHERE channel_id = ?",
-                            &[&channel_fetched.title(), &channel.id]
+                            "UPDATE channel SET title = ?, description = ? WHERE channel_id = ?",
+                            &[&channel_fetched.title(), &channel_fetched.description(), &channel.id]
                         ).unwrap();
 
                         /* Fetch feeds */
@@ -60,6 +61,7 @@ impl Component for ControllerSync {
                             /* Save feed in db */
                             create_item(
                                 &db_conn,
+                                item.link().unwrap(),
                                 item.title().unwrap(),
                                 item.description().unwrap(),
                                 channel.id);

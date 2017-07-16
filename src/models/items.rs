@@ -1,4 +1,5 @@
 pub struct Item {
+    pub link: String,
     pub title: String,
     pub description: String,
 
@@ -6,8 +7,9 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(title: String, description: String, is_read: bool) -> Item {
+    pub fn new(link: String, title: String, description: String, is_read: bool) -> Item {
         Item {
+            link: link,
             title: title,
             description: description,
             is_read: is_read

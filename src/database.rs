@@ -12,18 +12,21 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         CREATE TABLE IF NOT EXISTS channel (
         channel_id      INTEGER PRIMARY KEY,
         link            TEXT UNIQUE ON CONFLICT IGNORE,
-        title           TEXT
+        title           TEXT,
+        description     TEXT
     )", &[]).unwrap();
 
     /* Item table */
     connection.execute("
         CREATE TABLE IF NOT EXISTS item (
         item_id         INTEGER PRIMARY KEY,
+        link            TEXT,
         title           TEXT,
         description     TEXT,
         is_read         BOOL,
         channel_id      INTEGER,
-        FOREIGN KEY(channel_id) REFERENCES channel(channel_id)
+        FOREIGN KEY(channel_id) REFERENCES channel(channel_id),
+        UNIQUE (link, channel_id) ON CONFLICT IGNORE
     )", &[]).unwrap();
 
     /* Register new channels */
@@ -48,12 +51,13 @@ pub fn get_channels(db_connection: &Connection) -> ListChannels {
     let mut channels = ListChannels::new();
 
     let mut statement = db_connection.prepare("
-        SELECT channel_id, link, title FROM channel").unwrap();
+        SELECT channel_id, link, title, description FROM channel").unwrap();
     let results = statement.query_map(&[], |row| {
         Channel {
             id: row.get(0),
             link: row.get(1),
             title: row.get(2),
+            description: row.get(3),
         }
     }).unwrap();
     for channel in results {
@@ -75,12 +79,13 @@ pub fn get_total_unread_item(db_connection: &Connection, channel_id: i32) -> i32
 pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> ListItems {
     let mut items = ListItems::new();
     let mut statement = db_connection.prepare("
-                    SELECT title, description, is_read FROM item WHERE channel_id = ?").unwrap();
+                    SELECT link, title, description, is_read FROM item WHERE channel_id = ?").unwrap();
     let rows = statement.query_map(&[&channel_id], |row| {
         Item {
-            title: row.get(0),
-            description: row.get(1),
-            is_read: row.get(2)
+            link: row.get(0),
+            title: row.get(1),
+            description: row.get(2),
+            is_read: row.get(3)
         }
     }).unwrap();
     for row in rows {
@@ -89,10 +94,10 @@ pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> Li
     items
 }
 
-pub fn create_item(db_connection: &Connection, title: &str,
+pub fn create_item(db_connection: &Connection, link: &str, title: &str,
                    description: &str, channel_id: i32) {
     db_connection.execute(
-        "INSERT INTO item (title, description, channel_id, is_read) VALUES (?, ?, ?, ?)",
-        &[&title, &description, &channel_id, &false]
+        "INSERT INTO item (link, title, description, channel_id, is_read) VALUES (?, ?, ?, ?, ?)",
+        &[&link, &title, &description, &channel_id, &false]
     ).unwrap();
 }
