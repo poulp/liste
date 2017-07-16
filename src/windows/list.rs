@@ -72,11 +72,7 @@ impl WindowList {
             let mut display_index = 0;
             for index in self.data_start_index..self.data_end_index {
                 let cols = self.cols_data.get(index as usize).unwrap();
-                self.print_item_row(
-                    cols,
-                    display_index,
-                    self.active_item_index == index as i32
-                );
+                self.print_item_row(cols, display_index);
                 display_index += 1;
             }
             ncurses::wrefresh(self.window);
@@ -84,7 +80,7 @@ impl WindowList {
             let active_item_display = self.format_item_row(
                 self.cols_data.get(
                     self.active_item_index as usize).unwrap());
-            self.print_active_item_row(self.active_item_index + 1, active_item_display);
+            self.print_active_item_row(active_item_display);
         }
     }
 
@@ -177,15 +173,14 @@ impl WindowList {
         }
     }
 
-    fn print_item_row(&self, cols: &Vec<String>,
-                      index: i32, active_item: bool) {
+    fn print_item_row(&self, cols: &Vec<String>, index: i32) {
         let starty = index + 1;
         let display = self.format_item_row(cols);
         ncurses::mvwprintw(self.window, starty, self.startx, display.as_ref());
     }
 
 
-    fn print_active_item_row(&self, index: i32, display: String) {
+    fn print_active_item_row(&self, display: String) {
         let row_height = 1;
         let starty = self.active_item_display_index + 1;
         let window_active_item = ncurses::newwin(

@@ -40,7 +40,7 @@ impl MainDisplayControllers {
         }
     }
 
-    fn draw(&mut self, cache: &Cache) {
+    fn draw(&mut self, _cache: &Cache) {
         self.clear_windows();
         match self.current_window.as_ref() {
             "channels" => {
@@ -94,12 +94,12 @@ impl MainDisplayControllers {
 impl Component for MainDisplayControllers {
 
     fn on_init(&mut self, cache: &Cache) {
-        let mut channels_cols = self.get_channels_cols(cache);
+        let channels_cols = self.get_channels_cols(cache);
         self.window_channels.set_cols_data(channels_cols);
         self.draw(cache);
     }
 
-    fn on_key_down(&mut self, cache: &Cache) {
+    fn on_key_down(&mut self, _cache: &Cache) {
         // TODO move to window ?
         match self.current_window.as_ref() {
             "channels" => {
@@ -117,7 +117,7 @@ impl Component for MainDisplayControllers {
         }
     }
 
-    fn on_key_up(&mut self, cache: &Cache) {
+    fn on_key_up(&mut self, _cache: &Cache) {
         match self.current_window.as_ref() {
             "channels" => {
                 self.window_channels.clear();
@@ -158,7 +158,7 @@ impl Component for MainDisplayControllers {
             },
             "feeds" => {
                 if !cache.feeds.feeds.is_empty() {
-                    let mut feed = cache.feeds.feeds.get(
+                    let feed = cache.feeds.feeds.get(
                         self.window_feeds.get_active_item_index() as usize).unwrap();
                     self.window_feed.set_feed(feed);
                     self.current_window = String::from("read");
@@ -197,7 +197,7 @@ impl Component for MainDisplayControllers {
         self.draw(cache);
     }
 
-    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {}
+    fn on_channel_synchronize_start(&mut self, _cache: &mut Cache, _channel_name: &str) {}
 
     fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {
         let channels_cols = self.get_channels_cols(cache);

@@ -33,7 +33,7 @@ impl WindowText {
     }
 
     pub fn draw(&mut self) {
-        let mut sp = self.content.split("\n");
+        let sp = self.content.split("\n");
         for (index, line) in sp.enumerate() {
             ncurses::mvwprintw(self.window, index as i32, 0, line);
         }

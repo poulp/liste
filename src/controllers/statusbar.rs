@@ -47,9 +47,9 @@ impl Component for ControllerStatusBar {
         self.draw_commands();
     }
 
-    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {
+    fn on_channel_synchronize_start(&mut self, _cache: &mut Cache, channel_name: &str) {
         self.draw_text(String::from(channel_name));
     }
 
-    fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {}
+    fn on_channel_synchronize_done(&mut self, _cache: &mut Cache) {}
 }

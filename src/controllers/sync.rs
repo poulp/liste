@@ -81,7 +81,7 @@ impl Component for ControllerSync {
 
     fn on_synchronize_done(&mut self, _cache: &mut Cache) {}
 
-    fn on_channel_synchronize_start(&mut self, cache: &mut Cache, channel_name: &str) {}
+    fn on_channel_synchronize_start(&mut self, _cache: &mut Cache, _channel_name: &str) {}
 
-    fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {}
+    fn on_channel_synchronize_done(&mut self, _cache: &mut Cache) {}
 }
