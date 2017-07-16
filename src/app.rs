@@ -14,16 +14,16 @@ use controllers::sync::ControllerSync;
 use controllers::component::Component;
 use database::{
     init_database,
-    get_subscriptions,
+    get_channels,
 };
-use models::subscriptions::ListSubscriptions;
+use models::channels::ListChannels;
 use models::feeds::ListFeeds;
 use settings::Settings;
 
 const MS_PER_FRAME: u64 = 20;
 
 pub struct Cache {
-    pub subscriptions: ListSubscriptions,
+    pub channels: ListChannels,
     pub feeds: ListFeeds,
     pub db_connection: Connection,
 
@@ -37,10 +37,10 @@ impl Cache {
         let db_connection = Connection::open("base.db").unwrap();
         /* Create tables */
         init_database(&db_connection, &settings);
-        let subscriptions = get_subscriptions(&db_connection);
+        let channels = get_channels(&db_connection);
         let (tx, rx) = channel();
         Cache {
-            subscriptions: subscriptions,
+            channels: channels,
             feeds: ListFeeds::new(),
             db_connection: db_connection,
             tx: tx,
@@ -51,8 +51,8 @@ impl Cache {
 
 impl Cache {
     pub fn refresh(&mut self) {
-        let subscriptions = get_subscriptions(&self.db_connection);
-        self.subscriptions = subscriptions;
+        let channels = get_channels(&self.db_connection);
+        self.channels = channels;
     }
 }
 

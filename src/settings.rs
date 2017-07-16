@@ -13,7 +13,7 @@ const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
 
 pub struct Settings {
     pub settings_file: String,
-    pub subscriptions: Vec<String>
+    pub channels: Vec<String>
 }
 
 impl Settings {
@@ -22,22 +22,22 @@ impl Settings {
         let settings_file = matches.value_of("settings")
             .unwrap_or(SETTINGS_FILE);
         let path = Path::new(settings_file);
-        let mut subscriptions = vec![];
+        let mut channels = vec![];
         /* Open settings file and extract everything */
         match File::open(&path) {
             Ok(file) => {
-                /* Load here the list of subscriptions */
+                /* Load here the list of channels */
                 let buffer = BufReader::new(file);
                 /* Extract feeds urls */
                 for line in buffer.lines() {
                     let url = line.unwrap();
-                    /* Add subscription to the model */
-                    subscriptions.push(url.to_string());
+                    /* Add channel to the model */
+                    channels.push(url.to_string());
                 }
                 /* Return settings */
                 Ok(Settings {
                     settings_file: String::from(settings_file),
-                    subscriptions: subscriptions
+                    channels: channels
                 })
             },
             Err(why) => {

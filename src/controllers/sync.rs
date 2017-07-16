@@ -10,7 +10,7 @@ use controllers::component::Component;
 use app::Cache;
 
 use database::{
-    get_subscriptions,
+    get_channels,
     create_feed
 };
 
@@ -40,29 +40,29 @@ impl Component for ControllerSync {
         // TODO one thread per channel
         thread::spawn(move || {
             let db_conn = Connection::open("base.db").unwrap();
-            let subscriptions = get_subscriptions(&db_conn);
+            let channels = get_channels(&db_conn);
 
-            for subscription in subscriptions.subscriptions.iter() {
+            for channel in channels.channels.iter() {
                 tx.send(
-                    format!("{}", subscription.title())
+                    format!("{}", channel.title())
                 ).unwrap();
                 // Download feeds
-                let channel_opt = Channel::from_url(subscription.url.as_ref());
+                let channel_opt = Channel::from_url(channel.url.as_ref());
                 match channel_opt {
-                    Ok(channel) => {
+                    Ok(channel_fetched) => {
                         db_conn.execute(
-                            "UPDATE subscription SET title = ? WHERE subscription_id = ?",
-                            &[&channel.title(), &subscription.id]
+                            "UPDATE channel SET title = ? WHERE channel_id = ?",
+                            &[&channel_fetched.title(), &channel.id]
                         ).unwrap();
 
                         /* Fetch feeds */
-                        for item in channel.items() {
+                        for item in channel_fetched.items() {
                             /* Save feed in db */
                             create_feed(
                                 &db_conn,
                                 item.title().unwrap(),
                                 item.description().unwrap(),
-                                subscription.id);
+                                channel.id);
                         }
 
                     },
