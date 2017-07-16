@@ -17,14 +17,14 @@ use database::{
     get_channels,
 };
 use models::channels::ListChannels;
-use models::feeds::ListFeeds;
+use models::items::ListItems;
 use settings::Settings;
 
 const MS_PER_FRAME: u64 = 20;
 
 pub struct Cache {
     pub channels: ListChannels,
-    pub feeds: ListFeeds,
+    pub items: ListItems,
     pub db_connection: Connection,
 
     pub tx: Sender<String>,
@@ -41,7 +41,7 @@ impl Cache {
         let (tx, rx) = channel();
         Cache {
             channels: channels,
-            feeds: ListFeeds::new(),
+            items: ListItems::new(),
             db_connection: db_connection,
             tx: tx,
             rx: rx

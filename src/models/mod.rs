@@ -1,2 +1,2 @@
-pub mod feeds;
+pub mod items;
 pub mod channels;

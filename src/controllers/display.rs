@@ -1,7 +1,7 @@
 extern crate ncurses;
 
 use super::super::database::{
-    get_feeds_from_channel
+    get_items_from_channel
 };
 use windows::list::WindowList;
 use windows::text::WindowText;
@@ -10,13 +10,13 @@ use controllers::component::Component;
 
 pub struct MainDisplayControllers {
     window_channels: WindowList,
-    window_feeds: WindowList,
-    window_feed: WindowText,
+    window_items: WindowList,
+    window_item: WindowText,
 
     /* possible values :
      *  - channels
-     *  - feeds
-     *  - read
+     *  - items
+     *  - item
      */
     // TODO find a better way
     // TODO state pattern
@@ -29,13 +29,13 @@ impl MainDisplayControllers {
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
         ];
-        let cols_feeds = vec![
+        let cols_items = vec![
             (String::from("Title"), 12)
         ];
         MainDisplayControllers {
             window_channels: WindowList::new(cols_channel),
-            window_feeds: WindowList::new(cols_feeds),
-            window_feed: WindowText::new(),
+            window_items: WindowList::new(cols_items),
+            window_item: WindowText::new(),
             current_window: String::from("channels"),
         }
     }
@@ -46,11 +46,11 @@ impl MainDisplayControllers {
             "channels" => {
                 self.window_channels.draw();
             },
-            "feeds" => {
-                self.window_feeds.draw();
+            "items" => {
+                self.window_items.draw();
             },
-            "read" => {
-                self.window_feed.draw();
+            "item" => {
+                self.window_item.draw();
             },
             _ => {}
         }
@@ -61,11 +61,11 @@ impl MainDisplayControllers {
             "channels" => {
                 self.window_channels.clear();
             },
-            "feeds" => {
-                self.window_feeds.clear();
+            "items" => {
+                self.window_items.clear();
             },
-            "read" => {
-                self.window_feed.clear();
+            "item" => {
+                self.window_item.clear();
             },
             _ => {}
         }
@@ -75,19 +75,19 @@ impl MainDisplayControllers {
         let mut list_cols: Vec<Vec<String>> = vec![];
         for channel in &cache.channels.channels {
             list_cols.push(vec![
-                channel.get_total_feed_unread(&cache.db_connection).to_string(),
+                channel.get_total_item_unread(&cache.db_connection).to_string(),
                 String::from(channel.title()) // TODO use ref ?
             ]);
         }
         list_cols
     }
 
-    fn get_feeds_cols(&self, cache: &Cache) -> Vec<Vec<String>> {
-        let mut list_feeds: Vec<Vec<String>> = vec![];
-        for feed in &cache.feeds.feeds {
-            list_feeds.push(vec![String::from(feed.title.as_ref())]);
+    fn get_items_cols(&self, cache: &Cache) -> Vec<Vec<String>> {
+        let mut list_items: Vec<Vec<String>> = vec![];
+        for item in &cache.items.items {
+            list_items.push(vec![String::from(item.title.as_ref())]);
         }
-        list_feeds
+        list_items
     }
 }
 
@@ -106,12 +106,12 @@ impl Component for MainDisplayControllers {
                 self.window_channels.clear();
                 self.window_channels.draw_next_item();
             },
-            "feeds" => {
-                self.window_feeds.clear();
-                self.window_feeds.draw_next_item();
+            "items" => {
+                self.window_items.clear();
+                self.window_items.draw_next_item();
             },
-            "read" => {
-                self.window_feed.scroll_down();
+            "item" => {
+                self.window_item.scroll_down();
             },
             _ => {}
         }
@@ -123,12 +123,12 @@ impl Component for MainDisplayControllers {
                 self.window_channels.clear();
                 self.window_channels.draw_previous_item();
             },
-            "feeds" => {
-                self.window_feeds.clear();
-                self.window_feeds.draw_previous_item();
+            "items" => {
+                self.window_items.clear();
+                self.window_items.draw_previous_item();
             },
-            "read" => {
-                self.window_feed.scroll_up();
+            "item" => {
+                self.window_item.scroll_up();
             },
             _ => {}
         }
@@ -137,35 +137,35 @@ impl Component for MainDisplayControllers {
     fn on_key_enter(&mut self, cache: &mut Cache) {
         match self.current_window.as_ref() {
             "channels" => {
-                /* Clear feeds */
-                cache.feeds.clear();
+                /* Clear items */
+                cache.items.clear();
                 /* Get active channel id */
                 // TODO improve here
                 let channel_id = cache.channels.channels
                     .get(self.window_channels.get_active_item_index() as usize)
                     .unwrap()
                     .id;
-                /* Fetch feeds from db */
-                cache.feeds = get_feeds_from_channel(
+                /* Fetch items from db */
+                cache.items = get_items_from_channel(
                     &cache.db_connection,
                     channel_id
                 );
-                let feeds_data = self.get_feeds_cols(cache);
-                self.window_feeds.set_cols_data(feeds_data);
-                /* Load the feeds screen */
-                self.current_window = String::from("feeds");
+                let items_data = self.get_items_cols(cache);
+                self.window_items.set_cols_data(items_data);
+                /* Load the items screen */
+                self.current_window = String::from("items");
                 self.draw(cache);
             },
-            "feeds" => {
-                if !cache.feeds.feeds.is_empty() {
-                    let feed = cache.feeds.feeds.get(
-                        self.window_feeds.get_active_item_index() as usize).unwrap();
-                    self.window_feed.set_feed(feed);
-                    self.current_window = String::from("read");
+            "items" => {
+                if !cache.items.items.is_empty() {
+                    let item = cache.items.items.get(
+                        self.window_items.get_active_item_index() as usize).unwrap();
+                    self.window_item.set_item(item);
+                    self.current_window = String::from("item");
                     self.draw(cache);
                 }
             },
-            "read" => {
+            "item" => {
                 // nothing happen here
             },
             _ => {}
@@ -177,12 +177,12 @@ impl Component for MainDisplayControllers {
             "channels" => {
                 // nothing here
             },
-            "feeds" => {
+            "items" => {
                 self.current_window = String::from("channels");
                 self.draw(cache);
             },
-            "read" => {
-                self.current_window = String::from("feeds");
+            "item" => {
+                self.current_window = String::from("items");
                 self.draw(cache);
             },
             _ => {}

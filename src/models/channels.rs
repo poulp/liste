@@ -2,7 +2,7 @@ extern crate rusqlite;
 
 use self::rusqlite::Connection;
 
-use database::get_total_unread_feed;
+use database::get_total_unread_item;
 
 pub struct Channel {
     pub id: i32,
@@ -28,8 +28,8 @@ impl Channel {
         }
     }
 
-    pub fn get_total_feed_unread(&self, db_connection: &Connection) -> i32 {
-        get_total_unread_feed(db_connection, self.id)
+    pub fn get_total_item_unread(&self, db_connection: &Connection) -> i32 {
+        get_total_unread_item(db_connection, self.id)
     }
 }
 

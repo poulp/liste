@@ -4,7 +4,7 @@ use self::rusqlite::Connection;
 
 use settings::Settings;
 use models::channels::{Channel, ListChannels};
-use models::feeds::{Feed, ListFeeds};
+use models::items::{Item, ListItems};
 
 pub fn init_database(connection: &Connection, settings: &Settings) {
     /* Channel table */
@@ -15,10 +15,10 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         title           TEXT
     )", &[]).unwrap();
 
-    /* Feed table */
+    /* Item table */
     connection.execute("
-        CREATE TABLE IF NOT EXISTS feed (
-        feed_id         INTEGER PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS item (
+        item_id         INTEGER PRIMARY KEY,
         title           TEXT,
         description     TEXT,
         is_read         BOOL,
@@ -62,9 +62,9 @@ pub fn get_channels(db_connection: &Connection) -> ListChannels {
     channels
 }
 
-pub fn get_total_unread_feed(db_connection: &Connection, channel_id: i32) -> i32 {
+pub fn get_total_unread_item(db_connection: &Connection, channel_id: i32) -> i32 {
     let mut statement = db_connection.prepare("
-        SELECT COUNT(feed_id) FROM feed WHERE feed.is_read = 0 AND feed.channel_id = ?").unwrap();
+        SELECT COUNT(item_id) FROM item WHERE item.is_read = 0 AND item.channel_id = ?").unwrap();
     let mut results = statement.query_map(&[&channel_id], |row| {
         row.get(0)
     }).unwrap();
@@ -72,27 +72,27 @@ pub fn get_total_unread_feed(db_connection: &Connection, channel_id: i32) -> i32
     results.next().unwrap().unwrap()
 }
 
-pub fn get_feeds_from_channel(db_connection: &Connection, channel_id: i32) -> ListFeeds {
-    let mut feeds = ListFeeds::new();
+pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> ListItems {
+    let mut items = ListItems::new();
     let mut statement = db_connection.prepare("
-                    SELECT title, description, is_read FROM feed WHERE channel_id = ?").unwrap();
+                    SELECT title, description, is_read FROM item WHERE channel_id = ?").unwrap();
     let rows = statement.query_map(&[&channel_id], |row| {
-        Feed {
+        Item {
             title: row.get(0),
             description: row.get(1),
             is_read: row.get(2)
         }
     }).unwrap();
     for row in rows {
-        feeds.add_feed(row.unwrap());
+        items.add_item(row.unwrap());
     }
-    feeds
+    items
 }
 
-pub fn create_feed(db_connection: &Connection, title: &str,
+pub fn create_item(db_connection: &Connection, title: &str,
                    description: &str, channel_id: i32) {
     db_connection.execute(
-        "INSERT INTO feed (title, description, channel_id, is_read) VALUES (?, ?, ?, ?)",
+        "INSERT INTO item (title, description, channel_id, is_read) VALUES (?, ?, ?, ?)",
         &[&title, &description, &channel_id, &false]
     ).unwrap();
 }

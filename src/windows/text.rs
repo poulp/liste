@@ -1,6 +1,6 @@
 extern crate ncurses;
 
-use super::super::models::feeds::Feed;
+use super::super::models::items::Item;
 
 pub struct WindowText {
     window: ncurses::WINDOW,
@@ -28,8 +28,8 @@ impl WindowText {
         }
     }
 
-    pub fn set_feed(&mut self, feed: &Feed) {
-        self.content = feed.description.clone();
+    pub fn set_item(&mut self, item: &Item) {
+        self.content = item.description.clone();
     }
 
     pub fn draw(&mut self) {

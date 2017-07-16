@@ -11,7 +11,7 @@ use app::Cache;
 
 use database::{
     get_channels,
-    create_feed
+    create_item
 };
 
 pub struct ControllerSync {
@@ -58,7 +58,7 @@ impl Component for ControllerSync {
                         /* Fetch feeds */
                         for item in channel_fetched.items() {
                             /* Save feed in db */
-                            create_feed(
+                            create_item(
                                 &db_conn,
                                 item.title().unwrap(),
                                 item.description().unwrap(),
