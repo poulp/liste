@@ -47,7 +47,7 @@ impl Component for ControllerSync {
                     format!("{}", channel.title())
                 ).unwrap();
                 // Download feeds
-                let channel_opt = Channel::from_url(channel.url.as_ref());
+                let channel_opt = Channel::from_url(channel.link.as_ref());
                 match channel_opt {
                     Ok(channel_fetched) => {
                         db_conn.execute(

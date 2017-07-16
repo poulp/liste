@@ -6,26 +6,25 @@ use database::get_total_unread_feed;
 
 pub struct Channel {
     pub id: i32,
-    pub name: String,
-    pub url: String,
     pub title: Option<String>,
+    pub link: String,
 }
 
 impl Channel {
 
-    pub fn new(id: i32, name: String, url: String, title: Option<String>) -> Channel {
+    pub fn new(id: i32, link: String, title: Option<String>) -> Channel {
         Channel {
             id: id,
-            name: name,
-            url: url,
+            link: link,
             title: title
         }
     }
 
     pub fn title(&self) -> &str {
+        /* If no title return the link */
         match self.title.as_ref() {
             Some(title) => title,
-            None => self.name.as_ref()
+            None => self.link.as_ref()
         }
     }
 

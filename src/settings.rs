@@ -28,11 +28,11 @@ impl Settings {
             Ok(file) => {
                 /* Load here the list of channels */
                 let buffer = BufReader::new(file);
-                /* Extract feeds urls */
+                /* Extract channels links */
                 for line in buffer.lines() {
-                    let url = line.unwrap();
+                    let link = line.unwrap();
                     /* Add channel to the model */
-                    channels.push(url.to_string());
+                    channels.push(link.to_string());
                 }
                 /* Return settings */
                 Ok(Settings {
@@ -43,10 +43,10 @@ impl Settings {
             Err(why) => {
                 match path.to_str() {
                     Some(s) => {
-                        Err(format!("There is a problem with the urls file at {} :\n {}", s, why))
+                        Err(format!("There is a problem with the links file at {} :\n {}", s, why))
                     },
                     None => {
-                        Err(format!("There is a problem with the urls file :\n {}", why))
+                        Err(format!("There is a problem with the links file :\n {}", why))
                     }
                 }
             },

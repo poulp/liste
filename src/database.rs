@@ -10,9 +10,8 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
     /* Channel table */
     connection.execute("
         CREATE TABLE IF NOT EXISTS channel (
-        channel_id INTEGER PRIMARY KEY,
-        url             TEXT UNIQUE ON CONFLICT IGNORE,
-        name            TEXT,
+        channel_id      INTEGER PRIMARY KEY,
+        link            TEXT UNIQUE ON CONFLICT IGNORE,
         title           TEXT
     )", &[]).unwrap();
 
@@ -23,24 +22,24 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
         title           TEXT,
         description     TEXT,
         is_read         BOOL,
-        channel_id INTEGER,
+        channel_id      INTEGER,
         FOREIGN KEY(channel_id) REFERENCES channel(channel_id)
     )", &[]).unwrap();
 
     /* Register new channels */
     for channel in &settings.channels {
         connection.execute("
-            INSERT INTO channel (url, name) VALUES (?1, ?2)",
-                           &[channel, channel]).unwrap();
+            INSERT INTO channel (link) VALUES (?1)",
+                           &[channel]).unwrap();
     }
 
     /* Purge old channels */
-    let mut stmt = connection.prepare("SELECT url FROM channel").unwrap();
+    let mut stmt = connection.prepare("SELECT link FROM channel").unwrap();
     let rows = stmt.query_map(&[], |row| -> String {row.get(0)}).unwrap();
     for row in rows {
-        let url = row.unwrap();
-        if !settings.channels.iter().any(|x| x == &url) {
-            connection.execute("DELETE FROM channel WHERE url = ?", &[&url]).unwrap();
+        let link = row.unwrap();
+        if !settings.channels.iter().any(|x| x == &link) {
+            connection.execute("DELETE FROM channel WHERE link = ?", &[&link]).unwrap();
         }
     }
 }
@@ -49,13 +48,12 @@ pub fn get_channels(db_connection: &Connection) -> ListChannels {
     let mut channels = ListChannels::new();
 
     let mut statement = db_connection.prepare("
-        SELECT channel_id, name, url, title FROM channel").unwrap();
+        SELECT channel_id, link, title FROM channel").unwrap();
     let results = statement.query_map(&[], |row| {
         Channel {
             id: row.get(0),
-            name: row.get(1),
-            url: row.get(2),
-            title: row.get(3),
+            link: row.get(1),
+            title: row.get(2),
         }
     }).unwrap();
     for channel in results {
