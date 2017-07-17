@@ -38,15 +38,16 @@ fn main() {
         process::exit(1);
     }
 
-    // Configuration
+    // ncurses configuration
     ncurses::noecho(); // Don't echo while getch
     ncurses::keypad(ncurses::stdscr(), true);
     ncurses::curs_set(ncurses::CURSOR_VISIBILITY::CURSOR_INVISIBLE); // Hide cursor
-    ncurses::timeout(0); // non blocking io
+    ncurses::timeout(0); // non blocking io*
+    ncurses::use_default_colors();
+    ncurses::setlocale(ncurses::LcCategory::all, "en_US.UTF-8");
 
     ncurses::start_color(); // Enable colors
-    ncurses::init_pair(1, ncurses::COLOR_BLACK, ncurses::COLOR_WHITE);
-    ncurses::init_pair(2, ncurses::COLOR_WHITE, ncurses::COLOR_GREEN);
+    ncurses::init_pair(1, ncurses::COLOR_WHITE, ncurses::COLOR_GREEN);
     {
         let mut app = Application::new(&settings);
         app.main_loop()

@@ -19,7 +19,7 @@ impl WindowStatusBar {
 
     pub fn draw(&mut self, text: String) {
         self.clear();
-        ncurses::wbkgd(self.window, ncurses::COLOR_PAIR(2));
+        ncurses::wbkgd(self.window, ncurses::COLOR_PAIR(1));
         ncurses::wrefresh(self.window);
         ncurses::wattr_on(self.window, ncurses::A_BOLD());
         ncurses::mvwprintw(self.window, 0 , 1, &text);
