@@ -1,11 +1,11 @@
-extern crate ncurses;
 extern crate clap;
+extern crate toml;
 
-use std::io::BufReader;
-use std::io::BufRead;
+use std::io::Read;
 use std::fs::File;
 use std::path::Path;
 
+use self::toml::Value;
 use clap::ArgMatches;
 
 /* Default settings file location */
@@ -25,20 +25,42 @@ impl Settings {
         let mut channels = vec![];
         /* Open settings file and extract everything */
         match File::open(&path) {
-            Ok(file) => {
-                /* Load here the list of channels */
-                let buffer = BufReader::new(file);
-                /* Extract channels links */
-                for line in buffer.lines() {
-                    let link = line.unwrap();
-                    /* Add channel to the model */
-                    channels.push(link.to_string());
+            Ok(mut file) => {
+                let mut settings_content = String::new();
+                file.read_to_string(&mut settings_content).unwrap();
+                /* Parse toml */
+                let settings = settings_content.parse::<Value>().unwrap();
+                // Is there a way to avoid multiple if let like that ?
+                if let Some(channels_key) = settings.get("channels") {
+                    if let Some(channels_table) = channels_key.as_table() {
+                        if let Some(links_key) = channels_table.get("links") {
+                            if let Some(links_array) = links_key.as_array() {
+                                for link in links_array {
+                                    /* Add channel to the model */
+                                    channels.push(
+                                        String::from(link.as_str().unwrap()));
+                                }
+                                /* Return settings */
+                                Ok(Settings {
+                                    settings_file: String::from(settings_file),
+                                    channels: channels
+                                })
+                            } else {
+                                Err(format!("Links must be a list"))
+                            }
+                        } else {
+                            Err(format!("You must define a list of RSS/ATOM urls inside the settings file. Example : \n \
+                                        [channels]\n \
+                                        links = [\"http://mychannel.com/rss\"]"))
+                        }
+                    } else {
+                        Err(format!("Channels must be a table"))
+                    }
+                } else {
+                    Err(format!("You must define a list of RSS/ATOM urls inside the settings file. Example : \n \
+                                [channels]\n \
+                                links = [\"http://mychannel.com/rss\"]"))
                 }
-                /* Return settings */
-                Ok(Settings {
-                    settings_file: String::from(settings_file),
-                    channels: channels
-                })
             },
             Err(why) => {
                 match path.to_str() {

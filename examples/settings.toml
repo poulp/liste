@@ -1,0 +1,6 @@
+[channels]
+links = [
+    "https://news.ycombinator.com/rss",
+    "http://feeds.feedburner.com/PythonInsider",
+    "https://www.djangoproject.com/rss/weblog/"
+]
