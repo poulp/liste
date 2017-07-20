@@ -95,6 +95,7 @@ impl Component for MainDisplayControllers {
 
     fn on_init(&mut self, cache: &Cache) {
         let channels_cols = self.get_channels_cols(cache);
+        self.window_channels.init_active_item_index();
         self.window_channels.set_cols_data(channels_cols);
         self.draw(cache);
     }
@@ -151,6 +152,7 @@ impl Component for MainDisplayControllers {
                     channel_id
                 );
                 let items_data = self.get_items_cols(cache);
+                self.window_items.init_active_item_index();
                 self.window_items.set_cols_data(items_data);
                 /* Load the items screen */
                 self.current_window = String::from("items");

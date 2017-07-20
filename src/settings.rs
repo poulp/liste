@@ -4,12 +4,12 @@ extern crate toml;
 use std::io::Read;
 use std::fs::File;
 use std::path::Path;
-
+use std::env::home_dir;
 use self::toml::Value;
 use clap::ArgMatches;
 
 /* Default settings file location */
-const SETTINGS_FILE: &str = "~/.config/liste/settings.yml";
+//const SETTINGS_FILE_PATH: &str = "{}/.config/liste/settings.toml";
 
 pub struct Settings {
     pub settings_file: String,
@@ -18,9 +18,10 @@ pub struct Settings {
 
 impl Settings {
     pub fn new(matches: ArgMatches) -> Result<Settings, String> {
+        let settings_file_path = format!("{}/.config/liste/settings.toml", home_dir().unwrap().to_str().unwrap());
         /* Settings file path */
         let settings_file = matches.value_of("settings")
-            .unwrap_or(SETTINGS_FILE);
+            .unwrap_or(settings_file_path.as_ref());
         let path = Path::new(settings_file);
         let mut channels = vec![];
         /* Open settings file and extract everything */

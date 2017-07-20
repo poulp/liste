@@ -49,8 +49,6 @@ impl WindowList {
 
     pub fn set_cols_data(&mut self, data: Vec<Vec<String>>) {
         self.cols_data = data;
-        self.active_item_index = 0;
-        self.active_item_display_index = 0;
         self.data_start_index = 0;
 
         if self.cols_data.len() as i32 > self.height {
@@ -58,6 +56,11 @@ impl WindowList {
         } else {
             self.data_end_index = self.cols_data.len() as i32;
         }
+    }
+
+    pub fn init_active_item_index(&mut self) {
+        self.active_item_index = 0;
+        self.active_item_display_index = 0;
     }
 
     pub fn get_active_item_index(&self) -> i32 {
