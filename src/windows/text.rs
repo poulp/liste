@@ -4,8 +4,9 @@ use super::super::models::items::Item;
 
 pub struct WindowText {
     window: ncurses::WINDOW,
-
-    content: String
+    content: String,
+    height: i32,
+    scroll: i32
 }
 
 impl WindowText {
@@ -24,7 +25,9 @@ impl WindowText {
 
         WindowText {
             window: window,
-            content: String::from("")
+            content: String::from(""),
+            height: 0,
+            scroll: 0
         }
     }
 
@@ -33,22 +36,31 @@ impl WindowText {
     }
 
     pub fn draw(&mut self) {
+        self.height = 0;
         let sp = self.content.split("\n");
         for (index, line) in sp.enumerate() {
             ncurses::mvwprintw(self.window, index as i32, 0, line);
+            self.height += 1;
         }
-        //ncurses::mvwprintw(self.window, 0, 0, &feed.description);
         ncurses::wrefresh(self.window);
     }
 
     pub fn scroll_down(&mut self) {
-        ncurses::wscrl(self.window, 1);
-        ncurses::wrefresh(self.window);
+        if self.scroll < self.height {
+            self.draw();
+            self.scroll += 1;
+            ncurses::wscrl(self.window, self.scroll);
+            ncurses::wrefresh(self.window);
+        }
     }
 
     pub fn scroll_up(&mut self) {
-        ncurses::wscrl(self.window, -1);
-        ncurses::wrefresh(self.window);
+        if self.scroll > 0 {
+            self.draw();
+            self.scroll -= 1;
+            ncurses::wscrl(self.window, self.scroll);
+            ncurses::wrefresh(self.window);
+        }
     }
 
     pub fn clear(&mut self) {
