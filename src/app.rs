@@ -8,10 +8,10 @@ use std::time::Instant;
 
 use self::rusqlite::Connection;
 
-use controllers::statusbar::ControllerStatusBar;
-use controllers::display::MainDisplayControllers;
-use controllers::sync::ControllerSync;
-use controllers::component::Component;
+use components::statusbar::ComponentStatusBar;
+use components::display::MainDisplayComponent;
+use components::sync::ComponentSync;
+use components::component::Component;
 use database::{
     init_database,
     get_channels,
@@ -64,9 +64,9 @@ pub struct Application<> {
 impl<> Application<> {
     pub fn new(settings: &Settings) -> Application {
         let mut components: Vec<Box<Component>> = Vec::new();
-        components.push(Box::new(MainDisplayControllers::new()));
-        components.push(Box::new(ControllerStatusBar::new()));
-        components.push(Box::new(ControllerSync::new()));
+        components.push(Box::new(MainDisplayComponent::new()));
+        components.push(Box::new(ComponentStatusBar::new()));
+        components.push(Box::new(ComponentSync::new()));
 
         Application {
             components: components,

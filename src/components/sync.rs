@@ -12,7 +12,7 @@ use self::rusqlite::Connection;
 use self::rss::Channel;
 use self::atom_syndication::Feed;
 
-use controllers::component::Component;
+use components::component::Component;
 use app::Cache;
 
 use database::{
@@ -51,16 +51,15 @@ impl From<Error> for FetchError {
     }
 }
 
-pub struct ControllerSync {
-}
+pub struct ComponentSync {}
 
-impl ControllerSync {
-    pub fn new() -> ControllerSync {
-        ControllerSync{}
+impl ComponentSync {
+    pub fn new() -> ComponentSync {
+        ComponentSync{}
     }
 }
 
-impl Component for ControllerSync {
+impl Component for ComponentSync {
 
     fn on_init(&mut self, _cache: &Cache) {}
 

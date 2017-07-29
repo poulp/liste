@@ -1,15 +1,15 @@
 use windows::statusbar::WindowStatusBar;
-use controllers::component::Component;
+use components::component::Component;
 use app::Cache;
 
-pub struct ControllerStatusBar {
+pub struct ComponentStatusBar {
     window: WindowStatusBar
 }
 
-impl ControllerStatusBar {
-    pub fn new() -> ControllerStatusBar {
+impl ComponentStatusBar {
+    pub fn new() -> ComponentStatusBar {
         let window = WindowStatusBar::new();
-        ControllerStatusBar {
+        ComponentStatusBar {
             window: window,
         }
     }
@@ -23,7 +23,7 @@ impl ControllerStatusBar {
     }
 }
 
-impl Component for ControllerStatusBar {
+impl Component for ComponentStatusBar {
 
     fn on_init(&mut self, _cache: &Cache) {
         self.draw_commands();

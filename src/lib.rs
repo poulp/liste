@@ -1,7 +1,7 @@
 extern crate clap;
 extern crate ncurses;
 
-pub mod controllers;
+pub mod components;
 pub mod database;
 pub mod models;
 pub mod app;

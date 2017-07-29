@@ -6,9 +6,9 @@ use super::super::database::{
 use windows::list::WindowList;
 use windows::text::WindowText;
 use app::Cache;
-use controllers::component::Component;
+use components::component::Component;
 
-pub struct MainDisplayControllers {
+pub struct MainDisplayComponent {
     window_channels: WindowList,
     window_items: WindowList,
     window_item: WindowText,
@@ -23,8 +23,8 @@ pub struct MainDisplayControllers {
     current_window: String,
 }
 
-impl MainDisplayControllers {
-    pub fn new() -> MainDisplayControllers {
+impl MainDisplayComponent {
+    pub fn new() -> MainDisplayComponent {
         let cols_channel = vec![
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
@@ -32,7 +32,7 @@ impl MainDisplayControllers {
         let cols_items = vec![
             (String::from("Title"), 12)
         ];
-        MainDisplayControllers {
+        MainDisplayComponent {
             window_channels: WindowList::new(cols_channel),
             window_items: WindowList::new(cols_items),
             window_item: WindowText::new(),
@@ -91,7 +91,7 @@ impl MainDisplayControllers {
     }
 }
 
-impl Component for MainDisplayControllers {
+impl Component for MainDisplayComponent {
 
     fn on_init(&mut self, cache: &Cache) {
         let channels_cols = self.get_channels_cols(cache);
