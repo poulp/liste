@@ -13,3 +13,4 @@ rss = { version = "0.7.0", features = ["from_url"] }
 atom_syndication = "0.5"
 reqwest = "0.7"
 toml = "0.4"
+html5ever = "0.18.0"

@@ -18,12 +18,8 @@ impl ControllerStatusBar {
         self.window.draw(text);
     }
 
-    pub fn clear(&mut self) {
-        self.window.clear();
-    }
-
     pub fn draw_commands(&mut self) {
-        self.window.draw(String::from("q: Quit, s: Synchronization"));
+        self.window.draw(String::from("q: Quit, s: Synchronization, r: Back"));
     }
 }
 

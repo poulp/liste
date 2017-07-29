@@ -85,7 +85,7 @@ impl MainDisplayControllers {
     fn get_items_cols(&self, cache: &Cache) -> Vec<Vec<String>> {
         let mut list_items: Vec<Vec<String>> = vec![];
         for item in &cache.items.items {
-            list_items.push(vec![String::from(item.title.as_ref())]);
+            list_items.push(vec![item.title.clone()]);
         }
         list_items
     }

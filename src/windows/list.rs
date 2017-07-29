@@ -154,6 +154,7 @@ impl WindowList {
     }
 
     fn format_item_row(&self, cols: &Vec<String>) -> String {
+        /* Display a row according to the headers */
         if !self.cols_header.is_empty() {
             let mut final_display = String::from("");
             for (index, cols_tuple) in self.cols_header.iter().enumerate() {
@@ -170,7 +171,16 @@ impl WindowList {
                     final_display.push_str("|");
                 }
             }
-            final_display
+
+            let cols = ncurses::COLS() as usize;
+
+            if final_display.len() > cols {
+                /* Cut word if too long */
+                String::from(
+                    format!("{}...", &final_display[..cols-4]))
+            } else {
+                final_display
+            }
         } else {
             cols[0].clone() // TODO ref ?
         }

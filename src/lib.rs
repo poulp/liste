@@ -7,3 +7,4 @@ pub mod models;
 pub mod app;
 pub mod settings;
 pub mod windows;
+pub mod utils;
