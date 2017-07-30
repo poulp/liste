@@ -1,4 +1,4 @@
 pub mod statusbar;
-pub mod display;
+pub mod context;
 pub mod sync;
 pub mod component;

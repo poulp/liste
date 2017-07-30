@@ -8,23 +8,21 @@ use windows::text::WindowText;
 use app::Cache;
 use components::component::Component;
 
-pub struct MainDisplayComponent {
+enum WindowState {
+    Channels,
+    Items,
+    Item
+}
+
+pub struct ComponentContext {
     window_channels: WindowList,
     window_items: WindowList,
     window_item: WindowText,
-
-    /* possible values :
-     *  - channels
-     *  - items
-     *  - item
-     */
-    // TODO find a better way
-    // TODO state pattern
-    current_window: String,
+    current_window: WindowState,
 }
 
-impl MainDisplayComponent {
-    pub fn new() -> MainDisplayComponent {
+impl ComponentContext {
+    pub fn new() -> ComponentContext {
         let cols_channel = vec![
             (String::from("Unread"), 12),
             (String::from("Channel"), 16),
@@ -32,42 +30,40 @@ impl MainDisplayComponent {
         let cols_items = vec![
             (String::from("Title"), 12)
         ];
-        MainDisplayComponent {
+        ComponentContext {
             window_channels: WindowList::new(cols_channel),
             window_items: WindowList::new(cols_items),
             window_item: WindowText::new(),
-            current_window: String::from("channels"),
+            current_window: WindowState::Channels,
         }
     }
 
     fn draw(&mut self, _cache: &Cache) {
         self.clear_windows();
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 self.window_channels.draw();
             },
-            "items" => {
+            WindowState::Items => {
                 self.window_items.draw();
             },
-            "item" => {
+            WindowState::Item => {
                 self.window_item.draw();
             },
-            _ => {}
         }
     }
 
     fn clear_windows(&mut self) {
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 self.window_channels.clear();
             },
-            "items" => {
+            WindowState::Items => {
                 self.window_items.clear();
             },
-            "item" => {
+            WindowState::Item => {
                 self.window_item.clear();
             },
-            _ => {}
         }
     }
 
@@ -91,7 +87,7 @@ impl MainDisplayComponent {
     }
 }
 
-impl Component for MainDisplayComponent {
+impl Component for ComponentContext {
 
     fn on_init(&mut self, cache: &Cache) {
         let channels_cols = self.get_channels_cols(cache);
@@ -101,43 +97,40 @@ impl Component for MainDisplayComponent {
     }
 
     fn on_key_down(&mut self, _cache: &Cache) {
-        // TODO move to window ?
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 self.window_channels.clear();
                 self.window_channels.draw_next_item();
             },
-            "items" => {
+            WindowState::Items => {
                 self.window_items.clear();
                 self.window_items.draw_next_item();
             },
-            "item" => {
+            WindowState::Item => {
                 self.window_item.scroll_down();
             },
-            _ => {}
         }
     }
 
     fn on_key_up(&mut self, _cache: &Cache) {
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 self.window_channels.clear();
                 self.window_channels.draw_previous_item();
             },
-            "items" => {
+            WindowState::Items => {
                 self.window_items.clear();
                 self.window_items.draw_previous_item();
             },
-            "item" => {
+            WindowState::Item => {
                 self.window_item.scroll_up();
             },
-            _ => {}
         }
     }
 
     fn on_key_enter(&mut self, cache: &mut Cache) {
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 /* Clear items */
                 cache.items.clear();
                 /* Get active channel id */
@@ -155,39 +148,37 @@ impl Component for MainDisplayComponent {
                 self.window_items.init_active_item_index();
                 self.window_items.set_cols_data(items_data);
                 /* Load the items screen */
-                self.current_window = String::from("items");
+                self.current_window = WindowState::Items;
                 self.draw(cache);
             },
-            "items" => {
+            WindowState::Items => {
                 if !cache.items.items.is_empty() {
                     let item = cache.items.items.get(
                         self.window_items.get_active_item_index() as usize).unwrap();
                     self.window_item.set_item(item);
-                    self.current_window = String::from("item");
+                    self.current_window = WindowState::Item;
                     self.draw(cache);
                 }
             },
-            "item" => {
+            WindowState::Item => {
                 // nothing happen here
             },
-            _ => {}
         }
     }
 
     fn on_key_previous(&mut self, cache: &Cache) {
-        match self.current_window.as_ref() {
-            "channels" => {
+        match self.current_window {
+            WindowState::Channels => {
                 // nothing here
             },
-            "items" => {
-                self.current_window = String::from("channels");
+            WindowState::Items => {
+                self.current_window = WindowState::Channels;
                 self.draw(cache);
             },
-            "item" => {
-                self.current_window = String::from("items");
+            WindowState::Item => {
+                self.current_window = WindowState::Items;
                 self.draw(cache);
             },
-            _ => {}
         }
     }
 

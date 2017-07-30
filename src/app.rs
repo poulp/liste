@@ -9,7 +9,7 @@ use std::time::Instant;
 use self::rusqlite::Connection;
 
 use components::statusbar::ComponentStatusBar;
-use components::display::MainDisplayComponent;
+use components::context::ComponentContext;
 use components::sync::ComponentSync;
 use components::component::Component;
 use database::{
@@ -64,7 +64,7 @@ pub struct Application<> {
 impl<> Application<> {
     pub fn new(settings: &Settings) -> Application {
         let mut components: Vec<Box<Component>> = Vec::new();
-        components.push(Box::new(MainDisplayComponent::new()));
+        components.push(Box::new(ComponentContext::new()));
         components.push(Box::new(ComponentStatusBar::new()));
         components.push(Box::new(ComponentSync::new()));
 
