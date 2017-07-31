@@ -23,6 +23,7 @@ use settings::Settings;
 const MS_PER_FRAME: u64 = 20;
 
 pub struct Cache {
+    /* Store data used by components */
     pub channels: ListChannels,
     pub items: ListItems,
     pub db_connection: Connection,

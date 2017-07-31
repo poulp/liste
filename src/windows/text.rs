@@ -44,6 +44,7 @@ impl WindowText {
     pub fn set_item(&mut self, item: &Item) {
         self.content = item.description.clone();
         self.title = item.title.clone();
+        self.scroll = 0;
     }
 
     fn draw_title(&mut self) -> i32 {
@@ -113,7 +114,8 @@ impl WindowText {
     }
 
     pub fn scroll_down(&mut self) {
-        if self.scroll < self.height {
+        if self.scroll < self.height - 1 {
+            ncurses::wclear(self.window);
             self.draw();
             self.scroll += 1;
             ncurses::wscrl(self.window, self.scroll);
@@ -123,6 +125,7 @@ impl WindowText {
 
     pub fn scroll_up(&mut self) {
         if self.scroll > 0 {
+            ncurses::wclear(self.window);
             self.draw();
             self.scroll -= 1;
             ncurses::wscrl(self.window, self.scroll);

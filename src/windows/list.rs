@@ -176,11 +176,10 @@ impl WindowList {
 
             if final_display.len() > cols {
                 /* Cut word if too long */
-                String::from(
-                    format!("{}...", &final_display[..cols-4]))
-            } else {
-                final_display
+                final_display.truncate(cols-4);
+                final_display.push_str("...");
             }
+            final_display
         } else {
             cols[0].clone() // TODO ref ?
         }
