@@ -35,6 +35,17 @@ impl Channel {
     }
 }
 
+impl Clone for Channel {
+    fn clone(&self) -> Channel {
+        Channel {
+            id: self.id,
+            link: self.link.clone(),
+            title: self.title.clone(),
+            description: self.description.clone()
+        }
+    }
+}
+
 pub struct ListChannels {
     pub channels: Vec<Channel>,
 }

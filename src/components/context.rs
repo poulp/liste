@@ -139,11 +139,21 @@ impl Component for ComponentContext {
                     .get(self.window_channels.get_active_item_index() as usize)
                     .unwrap()
                     .id;
-                /* Fetch items from db */
-                cache.items = get_items_from_channel(
-                    &cache.db_connection,
-                    channel_id
-                );
+                /* Fetch items from db.
+                 * Be careful if some thread is writing db */
+//                cache.db_lock.try_lock().unwrap_or_else(|mutex| {
+//                    println!("lol");
+//                    mutex
+//                });
+                match cache.db_lock.try_lock() {
+                    Ok(lock) => {
+                        cache.items = get_items_from_channel(
+                            &cache.db_connection,
+                            channel_id
+                        );
+                    },
+                    Err(_) => {}
+                }
                 let items_data = self.get_items_cols(cache);
                 self.window_items.init_active_item_index();
                 self.window_items.set_cols_data(items_data);
@@ -182,19 +192,18 @@ impl Component for ComponentContext {
         }
     }
 
-    fn on_synchronize_start(&mut self, _cache: &mut Cache) {}
+    fn on_synchronize_start(&mut self, _cache: &mut Cache) {
 
-    fn on_synchronize_done(&mut self, cache: &mut Cache) {
-        let channels_cols = self.get_channels_cols(cache);
-        self.window_channels.set_cols_data(channels_cols);
-        self.draw(cache);
     }
 
-    fn on_channel_synchronize_start(&mut self, _cache: &mut Cache, _channel_name: &str) {}
-
-    fn on_channel_synchronize_done(&mut self, cache: &mut Cache) {
-        let channels_cols = self.get_channels_cols(cache);
-        self.window_channels.set_cols_data(channels_cols);
-        self.draw(cache);
+    fn on_synchronize_done(&mut self, cache: &mut Cache) {
+//        match cache.db_lock.try_lock() {
+//            Ok(lock) => {
+//                let channels_cols = self.get_channels_cols(cache);
+//                self.window_channels.set_cols_data(channels_cols);
+//                self.draw(cache);
+//            },
+//            Err(_) => {}
+//        }
     }
 }

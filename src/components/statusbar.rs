@@ -37,15 +37,11 @@ impl Component for ComponentStatusBar {
 
     fn on_key_previous(&mut self, _cache: &Cache) {}
 
-    fn on_synchronize_start(&mut self, _cache: &mut Cache) {}
+    fn on_synchronize_start(&mut self, _cache: &mut Cache) {
+        self.draw_text(format!("Synchronization in progress ..."));
+    }
 
     fn on_synchronize_done(&mut self, _cache: &mut Cache) {
         self.draw_commands();
     }
-
-    fn on_channel_synchronize_start(&mut self, _cache: &mut Cache, channel_name: &str) {
-        self.draw_text(format!("Synchronization in progress ({})", String::from(channel_name)));
-    }
-
-    fn on_channel_synchronize_done(&mut self, _cache: &mut Cache) {}
 }

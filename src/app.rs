@@ -4,6 +4,7 @@ extern crate rusqlite;
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use self::rusqlite::Connection;
@@ -29,7 +30,8 @@ pub struct Cache {
     pub db_connection: Connection,
 
     pub tx: Sender<String>,
-    pub rx: Receiver<String>
+    pub rx: Receiver<String>,
+    pub db_lock: Arc<Mutex<i32>>
 }
 
 impl Cache {
@@ -45,7 +47,8 @@ impl Cache {
             items: ListItems::new(),
             db_connection: db_connection,
             tx: tx,
-            rx: rx
+            rx: rx,
+            db_lock: Arc::new(Mutex::new(0))
         }
     }
 }
@@ -92,15 +95,13 @@ impl<> Application<> {
                 Ok(event) => {
                     // TODO find a better way to send event from thread
                     match event.as_ref() {
-                        "cdone" => {
-                            self.on_channel_synchronize_done();
-                        },
                         "done" => {
                             self.on_synchronize_done();
-                        },
-                        _ => {
-                            self.on_channel_synchronize_start(&event);
                         }
+                        "cdone" => {
+                            self.on_synchronize_done();
+                        }
+                        _ => {}
                     }
                 },
                 Err(_) => {}
@@ -180,18 +181,6 @@ impl<> Application<> {
         self.cache.refresh();
         for component in self.components.iter_mut() {
             component.on_synchronize_done(&mut self.cache);
-        }
-    }
-
-    fn on_channel_synchronize_start(&mut self, event: &str) {
-        for component in self.components.iter_mut() {
-            component.on_channel_synchronize_start(&mut self.cache, event);
-        }
-    }
-
-    fn on_channel_synchronize_done(&mut self) {
-        for component in self.components.iter_mut() {
-            component.on_channel_synchronize_done(&mut self.cache);
         }
     }
 }

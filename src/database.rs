@@ -1,6 +1,7 @@
 extern crate rusqlite;
 
 use self::rusqlite::Connection;
+use self::rusqlite::Error;
 
 use settings::Settings;
 use models::channels::{Channel, ListChannels};
@@ -95,9 +96,9 @@ pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> Li
 }
 
 pub fn create_item(db_connection: &Connection, link: &str, title: &str,
-                   description: &str, channel_id: i32) {
+                   description: &str, channel_id: i32) -> Result<i32, Error> {
     db_connection.execute(
         "INSERT INTO item (link, title, description, channel_id, is_read) VALUES (?, ?, ?, ?, ?)",
         &[&link, &title, &description, &channel_id, &false]
-    ).unwrap();
+    )
 }
