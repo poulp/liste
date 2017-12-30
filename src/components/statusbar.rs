@@ -35,7 +35,7 @@ impl Component for ComponentStatusBar {
 
     fn on_key_enter(&mut self, _cache: &mut Cache) {}
 
-    fn on_key_previous(&mut self, _cache: &Cache) {}
+    fn on_key_previous(&mut self, _cache: &mut Cache) {}
 
     fn on_synchronize_start(&mut self, _cache: &mut Cache) {
         self.draw_text(format!("Synchronization in progress ..."));

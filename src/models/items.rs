@@ -1,4 +1,11 @@
+extern crate rusqlite;
+
+use self::rusqlite::Connection;
+
+use::database::set_iteam_as_read;
+
 pub struct Item {
+    pub id: i32,
     pub link: String,
     pub title: String,
     pub description: String,
@@ -7,32 +14,27 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(link: String, title: String, description: String, is_read: bool) -> Item {
+    pub fn new(id: i32, link: String, title: String, description: String, is_read: bool) -> Item {
         Item {
-            link: link,
-            title: title,
-            description: description,
-            is_read: is_read
-        }
-    }
-}
-
-pub struct ListItems {
-    pub items: Vec<Item>
-}
-
-impl ListItems {
-    pub fn new() -> ListItems {
-        ListItems {
-            items: vec![]
+            id,
+            link,
+            title,
+            description,
+            is_read
         }
     }
 
-    pub fn add_item(&mut self, item: Item) {
-        self.items.push(item);
-    }
+    pub fn set_as_read(&mut self, db_connection: &Connection, is_read: bool) {
+        let is_read_int = match is_read {
+            true => 1,
+            false => 0
+        };
 
-    pub fn clear(&mut self) {
-        self.items.clear();
+        match set_iteam_as_read(db_connection, self.id, is_read_int) {
+            Ok(_) => {
+                self.is_read = is_read;
+            },
+            Err(_) => {}
+        }
     }
 }

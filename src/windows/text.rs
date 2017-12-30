@@ -8,7 +8,15 @@ use self::html5ever::rcdom::{NodeData, RcDom, Handle};
 use self::html5ever::tendril::{StrTendril, TendrilSink};
 
 use super::super::models::items::Item;
-use super::super::utils::get_lines_height_from_content;
+
+
+pub fn get_lines_height_from_content(content: &str) -> i32 {
+    let len = content.len() as f32;
+    let cols = ncurses::COLS() as f32;
+    let height = len / cols;
+    height.ceil() as i32
+}
+
 
 pub struct WindowText {
     window: ncurses::WINDOW,
@@ -48,8 +56,8 @@ impl WindowText {
     }
 
     fn draw_title(&mut self) -> i32 {
-        /// Draw the title of the item and return
-        /// the height of the display in term of lines
+        // Draw the title of the item and return
+        // the height of the display in term of lines
         ncurses::wattr_on(self.window, ncurses::A_BOLD() | ncurses::A_UNDERLINE());
         ncurses::mvwprintw(self.window, 0 ,0, self.title.as_ref());
         ncurses::wattr_off(self.window, ncurses::A_BOLD() | ncurses::A_UNDERLINE());

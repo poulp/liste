@@ -1,11 +1,10 @@
 extern crate rusqlite;
 
-use self::rusqlite::Connection;
-use self::rusqlite::Error;
+use self::rusqlite::{Connection, Error};
 
 use settings::Settings;
-use models::channels::{Channel, ListChannels};
-use models::items::{Item, ListItems};
+use models::channels::Channel;
+use models::items::Item;
 
 pub fn init_database(connection: &Connection, settings: &Settings) {
     /* Channel table */
@@ -48,50 +47,74 @@ pub fn init_database(connection: &Connection, settings: &Settings) {
     }
 }
 
-pub fn get_channels(db_connection: &Connection) -> ListChannels {
-    let mut channels = ListChannels::new();
+pub fn get_channels(db_connection: &Connection) -> Vec<Channel> {
+    let mut channels:Vec<Channel> = vec![];
 
     let mut statement = db_connection.prepare("
         SELECT channel_id, link, title, description FROM channel").unwrap();
-    let results = statement.query_map(&[], |row| {
-        Channel {
-            id: row.get(0),
-            link: row.get(1),
-            title: row.get(2),
-            description: row.get(3),
-        }
-    }).unwrap();
-    for channel in results {
-        channels.add_channel(channel.unwrap());
+    let result_query = statement.query_map(&[], |row| {
+        Channel::new(
+            db_connection,
+            row.get(0),
+            row.get(1),
+            row.get(2),
+            row.get(3)
+        )
+    });
+
+    match result_query {
+        Ok(channels_raw) => {
+            for channel in channels_raw {
+                channels.push(channel.unwrap());
+            }
+        },
+        Err(_) => {}
     }
+
     channels
+}
+
+pub fn update_channel(db_connection: &Connection, title: &str,
+                  description: &str, channel_id: i32) -> Result<i32, rusqlite::Error>{
+    db_connection.execute(
+        "UPDATE channel SET title = ?, description = ? WHERE channel_id = ?",
+        &[&title, &description, &channel_id]
+    )
 }
 
 pub fn get_total_unread_item(db_connection: &Connection, channel_id: i32) -> i32 {
     let mut statement = db_connection.prepare("
         SELECT COUNT(item_id) FROM item WHERE item.is_read = 0 AND item.channel_id = ?").unwrap();
-    let mut results = statement.query_map(&[&channel_id], |row| {
+    let mut result = statement.query_map(&[&channel_id], |row| {
         row.get(0)
     }).unwrap();
-    // TODO beurk
-    results.next().unwrap().unwrap()
+    // TODO find a better way to write this
+    result.next().unwrap().unwrap()
 }
 
-pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> ListItems {
-    let mut items = ListItems::new();
+pub fn get_items_from_channel(db_connection: &Connection, channel_id: i32) -> Vec<Item> {
+    let mut items: Vec<Item> = vec![];
     let mut statement = db_connection.prepare("
-                    SELECT link, title, description, is_read FROM item WHERE channel_id = ?").unwrap();
-    let rows = statement.query_map(&[&channel_id], |row| {
+                    SELECT item_id, link, title, description, is_read FROM item WHERE channel_id = ?").unwrap();
+    let result_query = statement.query_map(&[&channel_id], |row| {
         Item {
-            link: row.get(0),
-            title: row.get(1),
-            description: row.get(2),
-            is_read: row.get(3)
+            id: row.get(0),
+            link: row.get(1),
+            title: row.get(2),
+            description: row.get(3),
+            is_read: row.get(4)
         }
-    }).unwrap();
-    for row in rows {
-        items.add_item(row.unwrap());
+    });
+
+    match result_query {
+        Ok(items_raw) => {
+            for item in items_raw {
+                items.push(item.unwrap());
+            }
+        },
+        Err(_) => {}
     }
+
     items
 }
 
@@ -100,5 +123,13 @@ pub fn create_item(db_connection: &Connection, link: &str, title: &str,
     db_connection.execute(
         "INSERT INTO item (link, title, description, channel_id, is_read) VALUES (?, ?, ?, ?, ?)",
         &[&link, &title, &description, &channel_id, &false]
+    )
+}
+
+pub fn set_iteam_as_read(db_connection: &Connection,
+                         id: i32, is_read: i32) -> Result<i32, Error> {
+    db_connection.execute(
+        "UPDATE item SET is_read = ? WHERE item_id = ?",
+        &[&is_read, &id]
     )
 }

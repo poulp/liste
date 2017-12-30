@@ -5,28 +5,29 @@ use std::thread;
 use std::time::Duration;
 use std::sync::mpsc::{channel, Sender, Receiver, TryRecvError};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+// use std::time::Instant;
 
 use self::rusqlite::Connection;
 
 use components::statusbar::ComponentStatusBar;
-use components::context::ComponentContext;
+use components::core::ComponentCore;
 use components::sync::ComponentSync;
 use components::component::Component;
 use database::{
     init_database,
     get_channels,
 };
-use models::channels::ListChannels;
-use models::items::ListItems;
+use models::channels::Channel;
+use models::items::Item;
 use settings::Settings;
 
-const MS_PER_FRAME: u64 = 20;
+// const MS_PER_FRAME: u64 = 60;
 
 pub struct Cache {
     /* Store data used by components */
-    pub channels: ListChannels,
-    pub items: ListItems,
+    // TODO why not directly a vect ?
+    pub channels: Vec<Channel>,
+    pub items: Vec<Item>,
     pub db_connection: Connection,
 
     pub tx: Sender<String>,
@@ -43,11 +44,11 @@ impl Cache {
         let channels = get_channels(&db_connection);
         let (tx, rx) = channel();
         Cache {
-            channels: channels,
-            items: ListItems::new(),
-            db_connection: db_connection,
-            tx: tx,
-            rx: rx,
+            channels,
+            items: vec![],
+            db_connection,
+            tx,
+            rx,
             db_lock: Arc::new(Mutex::new(0))
         }
     }
@@ -57,6 +58,12 @@ impl Cache {
     pub fn refresh(&mut self) {
         let channels = get_channels(&self.db_connection);
         self.channels = channels;
+    }
+
+    pub fn set_item_as_read(&mut self, index: i32) {
+        let item = self.items.get_mut(
+                        index as usize).unwrap();
+        item.set_as_read(&self.db_connection, true);
     }
 }
 
@@ -68,12 +75,12 @@ pub struct Application<> {
 impl<> Application<> {
     pub fn new(settings: &Settings) -> Application {
         let mut components: Vec<Box<Component>> = Vec::new();
-        components.push(Box::new(ComponentContext::new()));
+        components.push(Box::new(ComponentCore::new()));
         components.push(Box::new(ComponentStatusBar::new()));
         components.push(Box::new(ComponentSync::new()));
 
         Application {
-            components: components,
+            components,
             cache: Cache::new(settings),
         }
     }
@@ -83,7 +90,7 @@ impl<> Application<> {
         self.on_init();
 
         loop {
-            let start = Instant::now();
+            // let start = Instant::now();
             /* Get user input (async) */
             let ch = ncurses::getch();
             if self.get_input(ch) {
@@ -98,16 +105,13 @@ impl<> Application<> {
                         "done" => {
                             self.on_synchronize_done();
                         }
-                        "cdone" => {
-                            self.on_synchronize_done();
-                        }
                         _ => {}
                     }
                 },
                 Err(_) => {}
             }
-            let sleep_time = (MS_PER_FRAME / 1000) - start.elapsed().as_secs();
-            thread::sleep(Duration::from_secs(sleep_time));
+            //let sleep_time = (MS_PER_FRAME / 1000) - start.elapsed().as_secs();
+            thread::sleep(Duration::from_millis(20));
         }
     }
 
@@ -166,7 +170,7 @@ impl<> Application<> {
 
     fn on_key_previous(&mut self) {
         for component in self.components.iter_mut() {
-            component.on_key_previous(&self.cache);
+            component.on_key_previous(&mut self.cache);
         }
     }
 

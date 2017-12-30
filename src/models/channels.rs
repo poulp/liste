@@ -8,17 +8,20 @@ pub struct Channel {
     pub id: i32,
     pub link: String,
     pub title: Option<String>,
-    pub description: Option<String>
+    pub description: Option<String>,
+    pub unread_items: i32
 }
 
 impl Channel {
 
-    pub fn new(id: i32, link: String, title: Option<String>, description: Option<String>) -> Channel {
+    pub fn new(db_connection: &Connection, id: i32, link: String, title: Option<String>, description: Option<String>) -> Channel {
+        let unread_items = get_total_unread_item(db_connection, id);
         Channel {
-            id: id,
-            link: link,
-            title: title,
-            description: description
+            id,
+            link,
+            title,
+            description,
+            unread_items
         }
     }
 
@@ -33,6 +36,7 @@ impl Channel {
     pub fn get_total_item_unread(&self, db_connection: &Connection) -> i32 {
         get_total_unread_item(db_connection, self.id)
     }
+
 }
 
 impl Clone for Channel {
@@ -41,24 +45,8 @@ impl Clone for Channel {
             id: self.id,
             link: self.link.clone(),
             title: self.title.clone(),
-            description: self.description.clone()
+            description: self.description.clone(),
+            unread_items: self.unread_items
         }
-    }
-}
-
-pub struct ListChannels {
-    pub channels: Vec<Channel>,
-}
-
-impl ListChannels {
-
-    pub fn new() -> ListChannels {
-        ListChannels {
-            channels: vec![],
-        }
-    }
-
-    pub fn add_channel(&mut self, channel: Channel) {
-        self.channels.push(channel);
     }
 }
