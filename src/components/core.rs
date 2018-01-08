@@ -3,9 +3,10 @@ extern crate ncurses;
 use super::super::database::{
     get_items_from_channel
 };
-use windows::list_channels::WindowList;
+use windows::list_channels::WindowListChannels;
 use windows::list_items::WindowListItems;
 use windows::text::WindowText;
+use windows::topbar::WindowTopBar;
 use app::Cache;
 use components::component::Component;
 
@@ -16,18 +17,20 @@ enum WindowState {
 }
 
 pub struct ComponentCore {
-    window_channels: WindowList,
+    window_channels: WindowListChannels,
     window_items: WindowListItems,
     window_item: WindowText,
+    window_topbar: WindowTopBar,
     current_window: WindowState,
 }
 
 impl ComponentCore {
     pub fn new() -> ComponentCore {
         ComponentCore {
-            window_channels: WindowList::new(),
+            window_channels: WindowListChannels::new(),
             window_items: WindowListItems::new(),
             window_item: WindowText::new(),
+            window_topbar: WindowTopBar::new(),
             current_window: WindowState::Channels,
         }
     }
@@ -36,9 +39,19 @@ impl ComponentCore {
         self.clear_windows();
         match self.current_window {
             WindowState::Channels => {
+                self.window_topbar.draw(String::from("Channels"));
                 self.window_channels.draw(cache);
             },
             WindowState::Items => {
+                /* Get active channel */
+                let active_channel = cache.channels
+                    .get(self.window_channels.get_active_item_index() as usize);
+                /* Display active channel title on top bar */
+                match active_channel {
+                    Some(channel) => { self.window_topbar.draw(String::from(channel.title())); },
+                    None => { self.window_topbar.draw(String::from("")); }
+                }
+                /* Draw the list of items */
                 self.window_items.draw(cache);
             },
             WindowState::Item => {

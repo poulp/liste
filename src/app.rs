@@ -25,7 +25,6 @@ use settings::Settings;
 
 pub struct Cache {
     /* Store data used by components */
-    // TODO why not directly a vect ?
     pub channels: Vec<Channel>,
     pub items: Vec<Item>,
     pub db_connection: Connection,

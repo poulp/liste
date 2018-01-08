@@ -5,7 +5,7 @@ use models::channels::Channel;
 
 const ROW_HEADER_HEIGHT: i32 = 1;
 
-pub struct WindowList {
+pub struct WindowListChannels {
     /* Display info */
     active_item_index: i32,
     /* Only display items between this index
@@ -20,18 +20,17 @@ pub struct WindowList {
     height: i32,
     width: i32,
     startx: i32,
-    starty: i32
 }
 
-impl WindowList {
-    pub fn new() -> WindowList {
-        let height = ncurses::LINES() - 1;
+impl WindowListChannels {
+    pub fn new() -> WindowListChannels {
+        let height = ncurses::LINES() - 2;
         let width = ncurses::COLS();
         let startx = 0;
-        let starty = 0;
+        let starty = 1;
         let window = ncurses::newwin(height, width, starty, startx);
 
-        WindowList {
+        WindowListChannels {
             active_item_index: 0,
             active_item_display_index: 0,
             data_start_index: 0,
@@ -40,7 +39,6 @@ impl WindowList {
             height,
             width,
             startx,
-            starty
         }
     }
 
@@ -79,11 +77,10 @@ impl WindowList {
             /* Display active item row */
             let active_channel = cache.channels.get(
                 self.active_item_index as usize).unwrap();
-
             self.print_active_item_row(active_channel);
         } else {
             /* Nothing to display */
-            ncurses::mvwprintw(self.window, 0, 0, "No items here ...");
+            ncurses::mvwprintw(self.window, 0, 0, "No channels here ...");
             ncurses::wrefresh(self.window);
         }
     }
@@ -128,8 +125,8 @@ impl WindowList {
         ncurses::wattr_on(self.window, ncurses::A_BOLD());
         ncurses::mvwprintw(
             self.window,
-            self.starty,
-            self.startx,
+            0,
+            0,
             final_display.as_ref());
         ncurses::wattr_off(self.window, ncurses::A_BOLD());
         ncurses::wrefresh(self.window);
@@ -165,17 +162,17 @@ impl WindowList {
 
         if channel.unread_items > 0 {
             ncurses::wattr_on(self.window, ncurses::A_BOLD());
-            ncurses::mvwprintw(self.window, starty, self.startx, display.as_ref());
+            ncurses::mvwprintw(self.window, starty, 0, display.as_ref());
             ncurses::wattr_off(self.window, ncurses::A_BOLD());
         } else {
-            ncurses::mvwprintw(self.window, starty, self.startx, display.as_ref());
+            ncurses::mvwprintw(self.window, starty, 0, display.as_ref());
         }
     }
 
 
     fn print_active_item_row(&self, channel: &Channel) {
         let row_height = 1;
-        let starty = self.active_item_display_index + 1;
+        let starty = self.active_item_display_index + 2;
         let window_active_item = ncurses::newwin(
             row_height,
             self.width,

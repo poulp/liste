@@ -20,15 +20,14 @@ pub struct WindowListItems {
     height: i32,
     width: i32,
     startx: i32,
-    starty: i32
 }
 
 impl WindowListItems {
     pub fn new() -> WindowListItems {
-        let height = ncurses::LINES() - 1;
+        let height = ncurses::LINES() - 2;
         let width = ncurses::COLS();
         let startx = 0;
-        let starty = 0;
+        let starty = 1;
         let window = ncurses::newwin(height, width, starty, startx);
 
         WindowListItems {
@@ -40,7 +39,6 @@ impl WindowListItems {
             height,
             width,
             startx,
-            starty
         }
     }
 
@@ -128,8 +126,8 @@ impl WindowListItems {
         ncurses::wattr_on(self.window, ncurses::A_BOLD());
         ncurses::mvwprintw(
             self.window,
-            self.starty,
-            self.startx,
+            0,
+            0,
             final_display.as_ref());
         ncurses::wattr_off(self.window, ncurses::A_BOLD());
         ncurses::wrefresh(self.window);
@@ -158,17 +156,17 @@ impl WindowListItems {
 
         if !item.is_read {
             ncurses::wattr_on(self.window, ncurses::A_BOLD());
-            ncurses::mvwprintw(self.window, starty, self.startx, display.as_ref());
+            ncurses::mvwprintw(self.window, starty, 0, display.as_ref());
             ncurses::wattr_off(self.window, ncurses::A_BOLD());
         } else {
-            ncurses::mvwprintw(self.window, starty, self.startx, display.as_ref());
+            ncurses::mvwprintw(self.window, starty, 0, display.as_ref());
         }
     }
 
 
     fn print_active_item_row(&self, item: &Item) {
         let row_height = 1;
-        let starty = self.active_item_display_index + 1;
+        let starty = self.active_item_display_index + 2;
         let window_active_item = ncurses::newwin(
             row_height,
             self.width,

@@ -14,15 +14,6 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(id: i32, link: String, title: String, description: String, is_read: bool) -> Item {
-        Item {
-            id,
-            link,
-            title,
-            description,
-            is_read
-        }
-    }
 
     pub fn set_as_read(&mut self, db_connection: &Connection, is_read: bool) {
         let is_read_int = match is_read {
