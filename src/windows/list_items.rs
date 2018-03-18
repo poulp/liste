@@ -63,22 +63,31 @@ impl WindowListItems {
     }
 
     pub fn draw(&self, cache: &Cache) {
-        if !cache.channels.is_empty() {
+        if !cache.items.is_empty() {
             /* Display columns headers */
             self.print_header_row();
             /* Display each row of the list */
             let mut display_index = 0;
             for index in self.data_start_index..self.data_end_index {
-                let item = cache.items.get(index as usize).unwrap();
-                self.print_item_row(item, display_index);
-                display_index += 1;
+                let item = cache.items.get(index as usize);
+                match item {
+                    Some(s) => {
+                        self.print_item_row(s, display_index);
+                        display_index += 1;
+                    },
+                    None => {}
+                }
             }
             ncurses::wrefresh(self.window);
             /* Display active item row */
             let active_item = cache.items.get(
-                self.active_item_index as usize).unwrap();
-
-            self.print_active_item_row(active_item);
+                self.active_item_index as usize);
+            match active_item {
+                Some(s) => {
+                    self.print_active_item_row(s);
+                },
+                None => {}
+            }
         } else {
             /* Nothing to display */
             ncurses::mvwprintw(self.window, 0, 0, "No items here ...");

@@ -69,15 +69,25 @@ impl WindowListChannels {
             /* Display each row of the list */
             let mut display_index = 0;
             for index in self.data_start_index..self.data_end_index {
-                let channel = cache.channels.get(index as usize).unwrap();
-                self.print_item_row(channel, display_index);
-                display_index += 1;
+                let channel = cache.channels.get(index as usize);
+                match channel {
+                    Some(s) => {
+                        self.print_item_row(&s, display_index);
+                        display_index += 1;
+                    },
+                    None => {}
+                }
             }
             ncurses::wrefresh(self.window);
             /* Display active item row */
             let active_channel = cache.channels.get(
-                self.active_item_index as usize).unwrap();
-            self.print_active_item_row(active_channel);
+                self.active_item_index as usize);
+            match active_channel {
+                Some(s) => {
+                    self.print_active_item_row(&s);
+                },
+                None => {}
+            }
         } else {
             /* Nothing to display */
             ncurses::mvwprintw(self.window, 0, 0, "No channels here ...");

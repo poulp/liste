@@ -121,26 +121,30 @@ impl Component for ComponentCore {
                 /* Clear items */
                 cache.items.clear();
                 /* Get active channel id */
-                let channel_id = cache.channels
-                    .get(self.window_channels.get_active_item_index() as usize)
-                    .unwrap()
-                    .id;
-                /* Fetch items from db.
-                 * Be careful if some thread is writing db */
-                match cache.db_lock.try_lock() {
-                    Ok(_) => {
-                        cache.items = get_items_from_channel(
-                            &cache.db_connection,
-                            channel_id
-                        );
+                let channel = cache.channels
+                    .get(self.window_channels.get_active_item_index() as usize);
+
+                match channel {
+                    Some(channel) => {
+                        /* Fetch items from db.
+                         * Be careful if some thread is writing db */
+                        match cache.db_lock.try_lock() {
+                            Ok(_) => {
+                                cache.items = get_items_from_channel(
+                                    &cache.db_connection,
+                                    channel.id
+                                );
+                            },
+                            Err(_) => {}
+                        }
+                        self.window_items.init_active_item_index();
+                        self.window_items.set_cols_data(cache);
+                        /* Load the items screen */
+                        self.current_window = WindowState::Items;
+                        self.draw(cache);
                     },
-                    Err(_) => {}
+                    None => {}
                 }
-                self.window_items.init_active_item_index();
-                self.window_items.set_cols_data(cache);
-                /* Load the items screen */
-                self.current_window = WindowState::Items;
-                self.draw(cache);
             },
             WindowState::Items => {
                 if !cache.items.is_empty() {
