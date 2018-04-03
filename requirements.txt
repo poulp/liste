@@ -1,3 +1,4 @@
+feedparser==5.2.1
 requests==2.7.0
 six==1.10.0
 toml==0.9.4

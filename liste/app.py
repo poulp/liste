@@ -5,6 +5,9 @@ import sqlite3
 import toml
 import feedparser
 
+from db import init_db, get_channels
+
+
 class Window:
 
     def __init__(self, height, width, starty, startx):
@@ -95,17 +98,19 @@ class WindowChannels:
 
 class Channel:
 
-    def __init__(self, url):
+    def __init__(self, url, title, description):
         self.url = url
+        self.title = title
+        self.description = description
 
 
 class Application:
 
-    def __init__(self, stdscr):
+    def __init__(self, stdscr, connection):
         lines, cols = stdscr.getmaxyx()
-
+        self.connection = connection
         self.channels = []
-        self.load_settings()
+        self.load_channels()
 
         self.bottom_bar = BottomBar(1, cols, lines - 1, 0)
         self.bottom_bar.window.nodelay(1)
@@ -115,12 +120,10 @@ class Application:
 
         self.top_bar = TopBar(1, cols, 0, 0)
 
-    def load_settings(self):
-        # TODO args
-        settings_toml = toml.load('/home/alex/.config/liste/settings.toml')
-        urls = settings_toml['channels'].get('urls')
-        for url in urls:
-            self.channels.append(Channel(url))
+    def load_channels(self):
+        raw_channels = get_channels(self.connection)
+        for raw_channel in raw_channels:
+            self.channels.append(Channel(raw_channel[0], raw_channel[1], raw_channel[2]))
 
     def synchronize(self):
         self.bottom_bar.draw(self, "synchronize")
@@ -130,13 +133,11 @@ class Application:
                 print(channel_parsed.feed.title)
 
     def loop(self, stdscr):
-
         self.top_bar.draw(self)
         self.window_channels.draw(self)
         self.bottom_bar.draw(self, "bottom")
 
         while True:
-
             cmd = self.bottom_bar.window.getch()
             if cmd == ord('q'):
                 break
@@ -150,7 +151,11 @@ class Application:
 
 
 def main(stdscr):
-    app = Application(stdscr)
+    connection = sqlite3.connect('base.db')
+    settings_toml = toml.load('/home/alex/.config/liste/settings.toml')
+    # TODO handle exception
+    urls = settings_toml['channels'].get('urls')
+    init_db(connection, urls)
 
     curses.noecho()  # Don't echo while getch
     curses.start_color()
@@ -158,8 +163,10 @@ def main(stdscr):
     curses.curs_set(0)
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 
+    app = Application(stdscr, connection)
     app.loop(stdscr)
 
+    connection.close()
     curses.endwin()
 
 
